@@ -1,0 +1,2172 @@
+{
+	"info": {
+		"_postman_id": "85dfb2af-fd58-4464-89e9-cfcf289f0330",
+		"name": "Attendance & Interaction - Full Collection",
+		"description": "Base URL is hardcoded per request as http://127.0.0.1:8000. Also available as {{baseUrl}} variable.\nFolders: Auth, Admin (Courses/Sections/Enrollments/Users), Teacher (Lectures/Interaction/Chat), Student (Attendance/Lectures/Interaction/Chat), Debug.\n\nSet tokens manually:\n- token_admin\n- token_teacher\n- token_student\n\nCommon IDs:\n- course_id, section_id, lecture_id, publication_id\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24620574"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "register (ADMIN ONLY)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token_admin}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "full_name",
+									"value": "Teacher One",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "teacher1@example.com",
+									"type": "text"
+								},
+								{
+									"key": "phone",
+									"value": "0999999999",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "12345678",
+									"type": "text"
+								},
+								{
+									"key": "password_confirmation",
+									"value": "12345678",
+									"type": "text"
+								},
+								{
+									"key": "role",
+									"value": "teacher",
+									"type": "text"
+								},
+								{
+									"key": "profile_photo",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/register",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "verify-email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "teacher1@example.com",
+									"type": "text"
+								},
+								{
+									"key": "token",
+									"value": "ABC123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/verify-email",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"verify-email"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "login",
+									"value": "teacher1@example.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "12345678",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/login",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token_teacher}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/logout",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "resend-verification-code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "teacher1@example.com",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/resend-verification-code",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"resend-verification-code"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "forgot-password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/forgot-password?email=teacher1@example.com",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"forgot-password"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "teacher1@example.com"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset-password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/reset-password?email=teacher1@example.com&code=471049&password=123123123&password_confirmation=123123123",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"reset-password"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "teacher1@example.com"
+								},
+								{
+									"key": "code",
+									"value": "471049"
+								},
+								{
+									"key": "password",
+									"value": "123123123"
+								},
+								{
+									"key": "password_confirmation",
+									"value": "123123123"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refresh-token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "refresh_token",
+									"value": "SOME_REFRESH_TOKEN_EXAMPLE",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/refresh-token",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"refresh-token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Courses CRUD",
+					"item": [
+						{
+							"name": "Create Course",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"CS101\",\n  \"name\": \"Intro to CS\",\n  \"is_active\": true\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/courses",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"courses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Courses",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/courses",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"courses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Show Course",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/courses/{{course_id}}",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"courses",
+										"{{course_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Course",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Intro to Computer Science\",\n  \"is_active\": true\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/courses/{{course_id}}",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"courses",
+										"{{course_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Course",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/courses/{{course_id}}",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"courses",
+										"{{course_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Sections CRUD",
+					"item": [
+						{
+							"name": "Create Section",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Section A\",\n  \"semester\": \"Fall\",\n  \"year\": 2025,\n  \"is_active\": true\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/sections",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"sections"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Sections",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/sections",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"sections"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Show Section",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/sections/{{section_id}}",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"sections",
+										"{{section_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Section",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Section A1\",\n  \"is_active\": true\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/sections/{{section_id}}",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"sections",
+										"{{section_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Section",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/sections/{{section_id}}",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"sections",
+										"{{section_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Enrollments",
+					"item": [
+						{
+							"name": "Create Enrollment (single)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"section_id\": {{section_id}},\n  \"student_id\": {{student_id}}\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/enrollments",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"enrollments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Bulk Enrollments (new)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"section_id\": {{section_id}},\n  \"student_ids\": [{{student_id}}, 4, 5]\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/enrollments/bulk",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"enrollments",
+										"bulk"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Enrollments",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/enrollments",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"enrollments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Show Enrollment",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/enrollments/1",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"enrollments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Enrollments by Section",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/sections/{{section_id}}/enrollments",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"sections",
+										"{{section_id}}",
+										"enrollments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Enrollment",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/enrollments/1",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"enrollments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Course Assignments",
+					"item": [
+						{
+							"name": "Create Assignment",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"section_id\": {{section_id}},\n  \"course_id\": {{course_id}},\n  \"instructor_id\": {{teacher_id}},\n  \"first_starts_at\": \"2025-12-25 10:00:00\",\n  \"duration_minutes\": 120,\n  \"total_lectures\": 12,\n  \"is_active\": true\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/assignments",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"assignments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Assignments",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/assignments",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"assignments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Show Assignment",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/assignments/1",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"assignments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Assignment",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"is_active\": true\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/assignments/1",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"assignments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Assignment",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/assignments/1",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"assignments",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Users (Students/Teachers) - new",
+					"item": [
+						{
+							"name": "List Students",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "GEuHnGUdHMZIpgUDwrvZyqlYsIfXQzi6ymWf73CT120dbd86",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/students",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"students"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Teachers",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "GEuHnGUdHMZIpgUDwrvZyqlYsIfXQzi6ymWf73CT120dbd86",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/teachers",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"teachers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Show User",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/users/{{student_id}}",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"users",
+										"{{student_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update User (full_name/phone/email/is_active)",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "GEuHnGUdHMZIpgUDwrvZyqlYsIfXQzi6ymWf73CT120dbd86",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"full_name\": \"Student Updated\",\n  \"phone\": \"+49123456789\",\n  \"is_active\": true\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/users/14",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"users",
+										"14"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle User Active",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "GEuHnGUdHMZIpgUDwrvZyqlYsIfXQzi6ymWf73CT120dbd86",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_admin}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/admin/users/14/toggle-active",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"admin",
+										"users",
+										"14",
+										"toggle-active"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Teacher",
+			"item": [
+				{
+					"name": "Lectures",
+					"item": [
+						{
+							"name": "Start Lecture",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/start",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"{{lecture_id}}",
+										"start"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "End Lecture",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/end",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"{{lecture_id}}",
+										"end"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Live Attendance",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/attendance-live",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"{{lecture_id}}",
+										"attendance-live"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Teacher Lectures - Today",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/today",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"today"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Teacher Lectures - Week",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/week",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"week"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Interaction (Questions)",
+					"item": [
+						{
+							"name": "Create Question (True/False)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"lecture_id\": {{lecture_id}},\n  \"type\": \"true_false\",\n  \"question_text\": \"Laravel is a PHP framework.\",\n  \"points\": 1,\n  \"correct_index\": 0\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/questions",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"questions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Question (Short)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"lecture_id\": {{lecture_id}},\n  \"type\": \"short\",\n  \"question_text\": \"Explain briefly what an API is.\",\n  \"points\": 5\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/questions",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"questions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Question (MCQ)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"let r=pm.response.json(); if(r?.data?.id){pm.collectionVariables.set('question_id', r.data.id);} else if(r?.data?.data?.id){pm.collectionVariables.set('question_id', r.data.data.id);}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"lecture_id\": {{lecture_id}},\n  \"type\": \"mcq\",\n  \"question_text\": \"What is 2 + 2?\",\n  \"points\": 2,\n  \"options\": [\n    {\"text\": \"3\"},\n    {\"text\": \"4\"},\n    {\"text\": \"5\"}\n  ],\n  \"correct_index\": 1\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/questions",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"questions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Questions By Lecture",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/questions",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"{{lecture_id}}",
+										"questions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Publish Question (creates publication)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"question_id\": {{question_id}},\n  \"lecture_id\": {{lecture_id}},\n  \"expires_at\": \"2025-12-25 11:55:00\"\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/questions/publish",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"questions",
+										"publish"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Close Publication",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/publications/{{publication_id}}/close",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"publications",
+										"{{publication_id}}",
+										"close"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Interaction Report",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/interaction-report",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"{{lecture_id}}",
+										"interaction-report"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Chat",
+					"item": [
+						{
+							"name": "Get Lecture Chat",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/chat",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"{{lecture_id}}",
+										"chat"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Send Message (Teacher)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_teacher}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"message\": \"Hello class!\"\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/chat",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"teacher",
+										"lectures",
+										"{{lecture_id}}",
+										"chat"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Student",
+			"item": [
+				{
+					"name": "Attendance",
+					"item": [
+						{
+							"name": "Issue Attendance Token",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_student}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"lecture_id\": {{lecture_id}}\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/attendance/token",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"attendance",
+										"token"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Heartbeat (use token from previous response)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_student}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"PASTE_TOKEN_HERE\"\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/attendance/heartbeat",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"attendance",
+										"heartbeat"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Lectures",
+					"item": [
+						{
+							"name": "Student Lectures - Today",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_student}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/lectures/today",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"lectures",
+										"today"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Student Lectures - Week",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_student}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/lectures/week",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"lectures",
+										"week"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Interaction (Questions)",
+					"item": [
+						{
+							"name": "Active Questions for Lecture",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_student}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/lectures/{{lecture_id}}/active-questions",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"lectures",
+										"{{lecture_id}}",
+										"active-questions"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Answer MCQ/TrueFalse",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"publication_id\": {{publication_id}},\n  \"selected_option_id\": {{selected_option_id}}\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/answers",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"answers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Answer Short",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"publication_id\": {{publication_id}},\n  \"answer_text\": \"An API is a set of rules that allows systems to communicate.\"\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/answers",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"answers"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Chat",
+					"item": [
+						{
+							"name": "Get Lecture Chat",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_student}}"
+									}
+								],
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/lectures/{{lecture_id}}/chat",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"lectures",
+										"{{lecture_id}}",
+										"chat"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Send Message (Student)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token_student}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"message\": \"Hi teacher!\"\n}"
+								},
+								"url": {
+									"raw": "http://127.0.0.1:8000/api/student/lectures/{{lecture_id}}/chat",
+									"protocol": "http",
+									"host": [
+										"127",
+										"0",
+										"0",
+										"1"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"student",
+										"lectures",
+										"{{lecture_id}}",
+										"chat"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://127.0.0.1:8000"
+		},
+		{
+			"key": "token_admin",
+			"value": ""
+		},
+		{
+			"key": "token_teacher",
+			"value": ""
+		},
+		{
+			"key": "token_student",
+			"value": ""
+		},
+		{
+			"key": "course_id",
+			"value": "1"
+		},
+		{
+			"key": "section_id",
+			"value": "1"
+		},
+		{
+			"key": "lecture_id",
+			"value": "1"
+		},
+		{
+			"key": "student_id",
+			"value": "2"
+		},
+		{
+			"key": "teacher_id",
+			"value": "3"
+		},
+		{
+			"key": "publication_id",
+			"value": "1"
+		},
+		{
+			"key": "question_id",
+			"value": "1"
+		}
+	]
+}

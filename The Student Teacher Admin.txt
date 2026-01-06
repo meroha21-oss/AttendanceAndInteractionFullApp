@@ -1,0 +1,2525 @@
+The Student-Teacher Admin Dashboard is a robust web application built with React, Redux, and Material-UI (MUI). It serves as a comprehensive solution for managing classes from 1 to 10 in a school, providing distinct levels of access for administrators, teachers, and students.
+for the api we're using laravel framwork and we have already a template for the ui which i described for you at first 
+The Student-Teacher Admin Dashboard is a robust web application built with React, Redux, and Material-UI (MUI). It serves as a comprehensive solution for managing classes from 1 to 10 in a school, providing distinct levels of access for administrators, teachers, and students.
+i need you to delete redux from the project
+
+1-Admin:
+http://127.0.0.1:8000/api/register Register (ADMIN ONLY)
+body : a form not a json
+full_name,email,phone,password,password_confirmation,role(student, teacher, admin),profile_photo
+response :
+http://127.0.0.1:8000/api/verify-email POST request
+http://127.0.0.1:8000/api/login POST form : login,password
+http://127.0.0.1:8000/api/logout POST request
+http://127.0.0.1:8000/api/resend-verification-code email form : email
+http://127.0.0.1:8000/api/forgot-password?email=teacher1@example.com POST request
+http://127.0.0.1:8000/api/reset-password?email=teacher1@example.com&code=471049&password=123123123&password_confirmation=123123123 POST REQUEST
+http://127.0.0.1:8000/api/refresh-token POST request
+form : refresh_token
+2-Courses Builder
+http://127.0.0.1:8000/api/admin/courses post json request
+body :
+{
+  "code": "CS201",
+  "name": "Data Structures",
+  "is_active": true
+}
+response
+{
+    "success": true,
+    "message": "Course created.",
+    "data": {
+        "code": "CS201",
+        "name": "Data Structures",
+        "is_active": true,
+        "updated_at": "2025-12-18T11:26:24.000000Z",
+        "created_at": "2025-12-18T11:26:24.000000Z",
+        "id": 4
+    },
+    "errors": [],
+    "status": 201
+}
+http://127.0.0.1:8000/api/admin/courses get list all courses
+{
+    "success": true,
+    "message": "Courses list.",
+    "data": [
+        {
+            "id": 4,
+            "code": "CS201",
+            "name": "Data Structures",
+            "is_active": 1,
+            "created_at": "2025-12-18T11:26:24.000000Z",
+            "updated_at": "2025-12-18T11:26:24.000000Z"
+        },
+        {
+            "id": 3,
+            "code": "CS103",
+            "name": "Networks",
+            "is_active": 1,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z"
+        },
+        {
+            "id": 2,
+            "code": "CS102",
+            "name": "Databases",
+            "is_active": 1,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z"
+        },
+        {
+            "id": 1,
+            "code": "CS101",
+            "name": "Programming 1",
+            "is_active": 1,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z"
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/courses/1 get course by id
+{
+    "success": true,
+    "message": "Course details.",
+    "data": {
+        "id": 1,
+        "code": "CS101",
+        "name": "Programming 1",
+        "is_active": 1,
+        "created_at": "2025-12-17T14:50:37.000000Z",
+        "updated_at": "2025-12-17T14:50:37.000000Z"
+    },
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/courses/1 PUT request
+body : {
+  "name": "Data Structures (Updated)",
+  "is_active": true
+}
+response :
+{
+    "success": true,
+    "message": "Course updated.",
+    "data": {
+        "id": 1,
+        "code": "CS101",
+        "name": "Data Structures (Updated)",
+        "is_active": true,
+        "created_at": "2025-12-17T14:50:37.000000Z",
+        "updated_at": "2025-12-18T11:30:49.000000Z"
+    },
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/courses/1 DELETE request by id
+{
+    "success": true,
+    "message": "Course deleted.",
+    "data": [],
+    "errors": [],
+    "status": 200
+}
+or
+{
+    "success": false,
+    "message": "Course not found.",
+    "data": [],
+    "errors": [],
+    "status": 404
+}
+
+3-Admin Sections (CRUD)
+http://127.0.0.1:8000/api/admin/sections post request
+body :
+{
+  "name": "Section C",
+  "semester": "Fall",
+  "year": 2025,
+  "is_active": true
+}
+response
+{
+    "success": true,
+    "message": "Section created.",
+    "data": {
+        "name": "Section C",
+        "semester": "Fall",
+        "year": 2025,
+        "is_active": true,
+        "updated_at": "2025-12-18T14:54:17.000000Z",
+        "created_at": "2025-12-18T14:54:17.000000Z",
+        "id": 3
+    },
+    "errors": [],
+    "status": 201
+}
+http://127.0.0.1:8000/api/admin/sections get all sections
+{
+    "success": true,
+    "message": "Sections list.",
+    "data": [
+        {
+            "id": 2,
+            "name": "Section B",
+            "semester": "Fall",
+            "year": 2025,
+            "is_active": 1,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z"
+        },
+        {
+            "id": 1,
+            "name": "Section A",
+            "semester": "Fall",
+            "year": 2025,
+            "is_active": 1,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z"
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/sections/1 show section by id
+{
+    "success": true,
+    "message": "Section details.",
+    "data": {
+        "id": 1,
+        "name": "Section A",
+        "semester": "Fall",
+        "year": 2025,
+        "is_active": 1,
+        "created_at": "2025-12-17T14:50:37.000000Z",
+        "updated_at": "2025-12-17T14:50:37.000000Z"
+    },
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/sections/1 put request
+{
+  "name": "Section A (Updated)",
+  "is_active": true
+}
+to update
+{
+    "success": true,
+    "message": "Section updated.",
+    "data": {
+        "id": 1,
+        "name": "Section A (Updated)",
+        "semester": "Fall",
+        "year": 2025,
+        "is_active": true,
+        "created_at": "2025-12-17T14:50:37.000000Z",
+        "updated_at": "2025-12-18T14:56:33.000000Z"
+    },
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/sections/1 delete request
+{
+    "success": true,
+    "message": "Section deleted.",
+    "data": [],
+    "errors": [],
+    "status": 200
+}
+4-Admin - Enrollments
+http://127.0.0.1:8000/api/admin/enrollments post request
+body : {
+  "section_id": 1,
+  "student_id": 10
+}
+response : ERROR
+http://127.0.0.1:8000/api/admin/enrollments/bulk bulk enrollment for adding multiple student
+{
+  "section_id": {{section_id}},
+  "student_ids": [{{student_id}}, 4, 5]
+}
+response :
+
+
+
+
+http://127.0.0.1:8000/api/admin/enrollments get all enrollements
+{
+    "success": true,
+    "message": "Enrollments list.",
+    "data": [
+        {
+            "id": 10,
+            "section_id": 2,
+            "student_id": 14,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 14,
+                "full_name": "Student 10",
+                "email": "student10@uni.test",
+                "phone": "30000000010",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            },
+            "section": {
+                "id": 2,
+                "name": "Section B",
+                "semester": "Fall",
+                "year": 2025,
+                "is_active": 1,
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z"
+            }
+        },
+        {
+            "id": 9,
+            "section_id": 2,
+            "student_id": 13,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 13,
+                "full_name": "Student 9",
+                "email": "student9@uni.test",
+                "phone": "3000000009",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            },
+            "section": {
+                "id": 2,
+                "name": "Section B",
+                "semester": "Fall",
+                "year": 2025,
+                "is_active": 1,
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z"
+            }
+        },
+        {
+            "id": 8,
+            "section_id": 2,
+            "student_id": 12,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 12,
+                "full_name": "Student 8",
+                "email": "student8@uni.test",
+                "phone": "3000000008",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            },
+            "section": {
+                "id": 2,
+                "name": "Section B",
+                "semester": "Fall",
+                "year": 2025,
+                "is_active": 1,
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z"
+            }
+        },
+        {
+            "id": 7,
+            "section_id": 2,
+            "student_id": 11,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 11,
+                "full_name": "Student 7",
+                "email": "student7@uni.test",
+                "phone": "3000000007",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            },
+            "section": {
+                "id": 2,
+                "name": "Section B",
+                "semester": "Fall",
+                "year": 2025,
+                "is_active": 1,
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z"
+            }
+        },
+        {
+            "id": 6,
+            "section_id": 2,
+            "student_id": 10,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 10,
+                "full_name": "Student 6",
+                "email": "student6@uni.test",
+                "phone": "3000000006",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            },
+            "section": {
+                "id": 2,
+                "name": "Section B",
+                "semester": "Fall",
+                "year": 2025,
+                "is_active": 1,
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z"
+            }
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/enrollments/1 show enrollment by id
+{
+    "success": true,
+    "message": "Enrollment details.",
+    "data": {
+        "id": 10,
+        "section_id": 2,
+        "student_id": 14,
+        "created_at": "2025-12-17T14:50:37.000000Z",
+        "updated_at": "2025-12-17T14:50:37.000000Z",
+        "student": {
+            "id": 14,
+            "full_name": "Student 10",
+            "email": "student10@uni.test",
+            "phone": "30000000010",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        "section": {
+            "id": 2,
+            "name": "Section B",
+            "semester": "Fall",
+            "year": 2025,
+            "is_active": 1,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z"
+        }
+    },
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/sections/2/enrollments show enrollemnt by section
+{
+    "success": true,
+    "message": "Section enrollments.",
+    "data": [
+        {
+            "id": 10,
+            "section_id": 2,
+            "student_id": 14,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 14,
+                "full_name": "Student 10",
+                "email": "student10@uni.test",
+                "phone": "30000000010",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            }
+        },
+        {
+            "id": 9,
+            "section_id": 2,
+            "student_id": 13,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 13,
+                "full_name": "Student 9",
+                "email": "student9@uni.test",
+                "phone": "3000000009",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            }
+        },
+        {
+            "id": 8,
+            "section_id": 2,
+            "student_id": 12,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 12,
+                "full_name": "Student 8",
+                "email": "student8@uni.test",
+                "phone": "3000000008",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            }
+        },
+        {
+            "id": 7,
+            "section_id": 2,
+            "student_id": 11,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 11,
+                "full_name": "Student 7",
+                "email": "student7@uni.test",
+                "phone": "3000000007",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            }
+        },
+        {
+            "id": 6,
+            "section_id": 2,
+            "student_id": 10,
+            "created_at": "2025-12-17T14:50:37.000000Z",
+            "updated_at": "2025-12-17T14:50:37.000000Z",
+            "student": {
+                "id": 10,
+                "full_name": "Student 6",
+                "email": "student6@uni.test",
+                "phone": "3000000006",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "student",
+                "created_at": "2025-12-17T14:50:36.000000Z",
+                "updated_at": "2025-12-17T14:50:36.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            }
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/enrollments/1 delete Enrollemnt by id
+Admin - Assigment (CRUD + auto lectures)
+http://127.0.0.1:8000/api/admin/assignments create Assigment (Auto Generate Series )
+body :
+{
+  "section_id": 1,
+  "course_id": 1,
+  "instructor_id": 2,
+  "first_starts_at": "2025-12-21 10:00:00",
+  "duration_minutes": 120,
+  "total_lectures": 12
+}
+response:
+{
+    "success": true,
+    "message": "Course assigned and lectures generated.",
+    "data": {
+        "assignment": {
+            "id": 1,
+            "section_id": 3,
+            "course_id": 2,
+            "instructor_id": 2,
+            "first_starts_at": "2025-12-21T10:00:00.000000Z",
+            "duration_minutes": 120,
+            "total_lectures": 12,
+            "is_active": true,
+            "created_at": "2025-12-22T12:59:29.000000Z",
+            "updated_at": "2025-12-22T12:59:29.000000Z",
+            "section": {
+                "id": 3,
+                "name": "Section C",
+                "semester": "Fall",
+                "year": 2025,
+                "is_active": 1,
+                "created_at": "2025-12-18T14:54:17.000000Z",
+                "updated_at": "2025-12-18T14:54:17.000000Z"
+            },
+            "course": {
+                "id": 2,
+                "code": "CS102",
+                "name": "Databases",
+                "is_active": 1,
+                "created_at": "2025-12-17T14:50:37.000000Z",
+                "updated_at": "2025-12-17T14:50:37.000000Z"
+            },
+            "instructor": {
+                "id": 2,
+                "full_name": "Teacher 1",
+                "email": "teacher1@uni.test",
+                "phone": "2000000001",
+                "profile_photo": null,
+                "email_verified_at": null,
+                "is_active": true,
+                "ip_address": null,
+                "role": "teacher",
+                "created_at": "2025-12-17T14:50:35.000000Z",
+                "updated_at": "2025-12-17T14:50:35.000000Z",
+                "refresh_token_expires_at": null,
+                "two_factor_secret": null,
+                "two_factor_enabled": 0
+            },
+            "lectures": [
+                {
+                    "id": 1,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2025-12-21T00:00:00.000000Z",
+                    "starts_at": "2025-12-21T10:00:00.000000Z",
+                    "ends_at": "2025-12-21T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 1,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 2,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2025-12-28T00:00:00.000000Z",
+                    "starts_at": "2025-12-28T10:00:00.000000Z",
+                    "ends_at": "2025-12-28T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 2,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 3,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-01-04T00:00:00.000000Z",
+                    "starts_at": "2026-01-04T10:00:00.000000Z",
+                    "ends_at": "2026-01-04T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 3,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 4,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-01-11T00:00:00.000000Z",
+                    "starts_at": "2026-01-11T10:00:00.000000Z",
+                    "ends_at": "2026-01-11T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 4,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 5,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-01-18T00:00:00.000000Z",
+                    "starts_at": "2026-01-18T10:00:00.000000Z",
+                    "ends_at": "2026-01-18T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 5,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 6,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-01-25T00:00:00.000000Z",
+                    "starts_at": "2026-01-25T10:00:00.000000Z",
+                    "ends_at": "2026-01-25T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 6,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 7,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-02-01T00:00:00.000000Z",
+                    "starts_at": "2026-02-01T10:00:00.000000Z",
+                    "ends_at": "2026-02-01T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 7,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 8,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-02-08T00:00:00.000000Z",
+                    "starts_at": "2026-02-08T10:00:00.000000Z",
+                    "ends_at": "2026-02-08T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 8,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 9,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-02-15T00:00:00.000000Z",
+                    "starts_at": "2026-02-15T10:00:00.000000Z",
+                    "ends_at": "2026-02-15T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 9,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 10,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-02-22T00:00:00.000000Z",
+                    "starts_at": "2026-02-22T10:00:00.000000Z",
+                    "ends_at": "2026-02-22T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 10,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 11,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-03-01T00:00:00.000000Z",
+                    "starts_at": "2026-03-01T10:00:00.000000Z",
+                    "ends_at": "2026-03-01T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 11,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                },
+                {
+                    "id": 12,
+                    "assignment_id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "scheduled_date": "2026-03-08T00:00:00.000000Z",
+                    "starts_at": "2026-03-08T10:00:00.000000Z",
+                    "ends_at": "2026-03-08T12:00:00.000000Z",
+                    "status": "scheduled",
+                    "lecture_no": 12,
+                    "ended_at": null,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z"
+                }
+            ]
+        }
+    },
+    "errors": [],
+    "status": 201
+}
+note that we will use notistack for notification and validation message
+http://127.0.0.1:8000/api/admin/assignments get all assignments
+response : {
+               "success": true,
+               "message": "Assignments list.",
+               "data": [
+                   {
+                       "id": 1,
+                       "section_id": 3,
+                       "course_id": 2,
+                       "instructor_id": 2,
+                       "first_starts_at": "2025-12-21T10:00:00.000000Z",
+                       "duration_minutes": 120,
+                       "total_lectures": 12,
+                       "is_active": true,
+                       "created_at": "2025-12-22T12:59:29.000000Z",
+                       "updated_at": "2025-12-22T12:59:29.000000Z",
+                       "section": {
+                           "id": 3,
+                           "name": "Section C",
+                           "semester": "Fall",
+                           "year": 2025,
+                           "is_active": 1,
+                           "created_at": "2025-12-18T14:54:17.000000Z",
+                           "updated_at": "2025-12-18T14:54:17.000000Z"
+                       },
+                       "course": {
+                           "id": 2,
+                           "code": "CS102",
+                           "name": "Databases",
+                           "is_active": 1,
+                           "created_at": "2025-12-17T14:50:37.000000Z",
+                           "updated_at": "2025-12-17T14:50:37.000000Z"
+                       },
+                       "instructor": {
+                           "id": 2,
+                           "full_name": "Teacher 1",
+                           "email": "teacher1@uni.test",
+                           "phone": "2000000001",
+                           "profile_photo": null,
+                           "email_verified_at": null,
+                           "is_active": true,
+                           "ip_address": null,
+                           "role": "teacher",
+                           "created_at": "2025-12-17T14:50:35.000000Z",
+                           "updated_at": "2025-12-17T14:50:35.000000Z",
+                           "refresh_token_expires_at": null,
+                           "two_factor_secret": null,
+                           "two_factor_enabled": 0
+                       }
+                   }
+               ],
+               "errors": [],
+               "status": 200
+           }
+ http://127.0.0.1:8000/api/admin/assignments/1 show assigment by id this for view if you want to show details
+ response : {
+                "success": true,
+                "message": "Assignment details.",
+                "data": {
+                    "id": 1,
+                    "section_id": 3,
+                    "course_id": 2,
+                    "instructor_id": 2,
+                    "first_starts_at": "2025-12-21T10:00:00.000000Z",
+                    "duration_minutes": 120,
+                    "total_lectures": 12,
+                    "is_active": true,
+                    "created_at": "2025-12-22T12:59:29.000000Z",
+                    "updated_at": "2025-12-22T12:59:29.000000Z",
+                    "section": {
+                        "id": 3,
+                        "name": "Section C",
+                        "semester": "Fall",
+                        "year": 2025,
+                        "is_active": 1,
+                        "created_at": "2025-12-18T14:54:17.000000Z",
+                        "updated_at": "2025-12-18T14:54:17.000000Z"
+                    },
+                    "course": {
+                        "id": 2,
+                        "code": "CS102",
+                        "name": "Databases",
+                        "is_active": 1,
+                        "created_at": "2025-12-17T14:50:37.000000Z",
+                        "updated_at": "2025-12-17T14:50:37.000000Z"
+                    },
+                    "instructor": {
+                        "id": 2,
+                        "full_name": "Teacher 1",
+                        "email": "teacher1@uni.test",
+                        "phone": "2000000001",
+                        "profile_photo": null,
+                        "email_verified_at": null,
+                        "is_active": true,
+                        "ip_address": null,
+                        "role": "teacher",
+                        "created_at": "2025-12-17T14:50:35.000000Z",
+                        "updated_at": "2025-12-17T14:50:35.000000Z",
+                        "refresh_token_expires_at": null,
+                        "two_factor_secret": null,
+                        "two_factor_enabled": 0
+                    },
+                    "lectures": [
+                        {
+                            "id": 1,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2025-12-21T00:00:00.000000Z",
+                            "starts_at": "2025-12-21T10:00:00.000000Z",
+                            "ends_at": "2025-12-21T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 1,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 2,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2025-12-28T00:00:00.000000Z",
+                            "starts_at": "2025-12-28T10:00:00.000000Z",
+                            "ends_at": "2025-12-28T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 2,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 3,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-01-04T00:00:00.000000Z",
+                            "starts_at": "2026-01-04T10:00:00.000000Z",
+                            "ends_at": "2026-01-04T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 3,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 4,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-01-11T00:00:00.000000Z",
+                            "starts_at": "2026-01-11T10:00:00.000000Z",
+                            "ends_at": "2026-01-11T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 4,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 5,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-01-18T00:00:00.000000Z",
+                            "starts_at": "2026-01-18T10:00:00.000000Z",
+                            "ends_at": "2026-01-18T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 5,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 6,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-01-25T00:00:00.000000Z",
+                            "starts_at": "2026-01-25T10:00:00.000000Z",
+                            "ends_at": "2026-01-25T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 6,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 7,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-02-01T00:00:00.000000Z",
+                            "starts_at": "2026-02-01T10:00:00.000000Z",
+                            "ends_at": "2026-02-01T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 7,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 8,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-02-08T00:00:00.000000Z",
+                            "starts_at": "2026-02-08T10:00:00.000000Z",
+                            "ends_at": "2026-02-08T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 8,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 9,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-02-15T00:00:00.000000Z",
+                            "starts_at": "2026-02-15T10:00:00.000000Z",
+                            "ends_at": "2026-02-15T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 9,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 10,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-02-22T00:00:00.000000Z",
+                            "starts_at": "2026-02-22T10:00:00.000000Z",
+                            "ends_at": "2026-02-22T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 10,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 11,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-03-01T00:00:00.000000Z",
+                            "starts_at": "2026-03-01T10:00:00.000000Z",
+                            "ends_at": "2026-03-01T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 11,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        },
+                        {
+                            "id": 12,
+                            "assignment_id": 1,
+                            "section_id": 3,
+                            "course_id": 2,
+                            "instructor_id": 2,
+                            "scheduled_date": "2026-03-08T00:00:00.000000Z",
+                            "starts_at": "2026-03-08T10:00:00.000000Z",
+                            "ends_at": "2026-03-08T12:00:00.000000Z",
+                            "status": "scheduled",
+                            "lecture_no": 12,
+                            "ended_at": null,
+                            "created_at": "2025-12-22T12:59:29.000000Z",
+                            "updated_at": "2025-12-22T12:59:29.000000Z"
+                        }
+                    ]
+                },
+                "errors": [],
+                "status": 200
+            }
+http://127.0.0.1:8000/api/admin/assignments/1 put assigment by id with body
+body : {
+         "is_active": true
+       } for example
+       but keep in mind that when you want to update make sure that the button is transparent and use get by id to shoe the original data and when user change the data make the button clickable
+  http://127.0.0.1:8000/api/admin/assignments/1 delete by id
+  response :
+
+
+Users (student/teacher) for admin
+http://127.0.0.1:8000/api/admin/students get all students
+    {
+    "success": true,
+    "message": "Student list.",
+    "data": [
+        {
+            "id": 14,
+            "full_name": "Student 10",
+            "email": "student10@uni.test",
+            "phone": "30000000010",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:37",
+            "updated_at": "2025-12-17 14:50:37",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 13,
+            "full_name": "Student 9",
+            "email": "student9@uni.test",
+            "phone": "3000000009",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-22 13:41:16",
+            "refresh_token_expires_at": "2026-01-01 13:41:16",
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 12,
+            "full_name": "Student 8",
+            "email": "student8@uni.test",
+            "phone": "3000000008",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-17 14:50:36",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 11,
+            "full_name": "Student 7",
+            "email": "student7@uni.test",
+            "phone": "3000000007",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-22 13:06:23",
+            "refresh_token_expires_at": "2026-01-01 13:06:23",
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 10,
+            "full_name": "Student 6",
+            "email": "student6@uni.test",
+            "phone": "3000000006",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-17 14:50:36",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 9,
+            "full_name": "Student 5",
+            "email": "student5@uni.test",
+            "phone": "3000000005",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-17 14:50:36",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 8,
+            "full_name": "Student 4",
+            "email": "student4@uni.test",
+            "phone": "3000000004",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-17 14:50:36",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 7,
+            "full_name": "Student 3",
+            "email": "student3@uni.test",
+            "phone": "3000000003",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-23 12:33:00",
+            "refresh_token_expires_at": "2026-01-02 12:33:00",
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 6,
+            "full_name": "Student 2",
+            "email": "student2@uni.test",
+            "phone": "3000000002",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-17 14:50:36",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 5,
+            "full_name": "Student 1",
+            "email": "student1@uni.test",
+            "phone": "3000000001",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "student",
+            "created_at": "2025-12-17 14:50:36",
+            "updated_at": "2025-12-17 14:50:36",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/teachers list all teacher
+{
+    "success": true,
+    "message": "Teacher list.",
+    "data": [
+        {
+            "id": 16,
+            "full_name": "Teacher One",
+            "email": "teacher12@example.com",
+            "phone": "0999999923",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": "127.0.0.1",
+            "role": "teacher",
+            "created_at": "2025-12-18 10:57:23",
+            "updated_at": "2025-12-18 10:57:23",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 15,
+            "full_name": "Teacher One",
+            "email": "teacher1@example.com",
+            "phone": "0999999999",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": "127.0.0.1",
+            "role": "teacher",
+            "created_at": "2025-12-18 10:56:58",
+            "updated_at": "2025-12-18 10:56:58",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 4,
+            "full_name": "Teacher 3",
+            "email": "teacher3@uni.test",
+            "phone": "2000000003",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "teacher",
+            "created_at": "2025-12-17 14:50:35",
+            "updated_at": "2025-12-22 13:11:32",
+            "refresh_token_expires_at": "2026-01-01 13:11:32",
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 3,
+            "full_name": "Teacher 2",
+            "email": "teacher2@uni.test",
+            "phone": "2000000002",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "teacher",
+            "created_at": "2025-12-17 14:50:35",
+            "updated_at": "2025-12-17 14:50:35",
+            "refresh_token_expires_at": null,
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        },
+        {
+            "id": 2,
+            "full_name": "Teacher 1",
+            "email": "teacher1@uni.test",
+            "phone": "2000000001",
+            "profile_photo": null,
+            "email_verified_at": null,
+            "is_active": true,
+            "ip_address": null,
+            "role": "teacher",
+            "created_at": "2025-12-17 14:50:35",
+            "updated_at": "2025-12-22 13:46:20",
+            "refresh_token_expires_at": "2026-01-01 13:46:20",
+            "two_factor_secret": null,
+            "two_factor_enabled": 0
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/users/{user_id}
+{
+    "success": true,
+    "message": "User details.",
+    "data": {
+        "id": 1,
+        "full_name": "Admin User",
+        "email": "admin@uni.test",
+        "phone": "1000000001",
+        "profile_photo": null,
+        "email_verified_at": null,
+        "is_active": true,
+        "ip_address": null,
+        "role": "admin",
+        "created_at": "2025-12-17 14:50:35",
+        "updated_at": "2025-12-29 13:40:18",
+        "refresh_token_expires_at": "2026-01-08 13:40:18",
+        "two_factor_secret": null,
+        "two_factor_enabled": 0
+    },
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/admin/users/14 update user (full name/phone/email/is active)
+ body : {
+  "full_name": "Student Updated",
+  "phone": "+49123456789",
+  "is_active": true
+}
+http://127.0.0.1:8000/api/admin/users/14/toggle-active
+{
+    "success": true,
+    "message": "User status updated.",
+    "data": {
+        "id": 14,
+        "is_active": true
+    },
+    "errors": [],
+    "status": 200
+} weather its true or false
+
+Teacher
+    Lecture
+        http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/start
+        responses :
+        {
+            "success": false,
+            "message": "Too early to start lecture.",
+            "data": [],
+            "errors": {
+                "starts_at": [
+                    "2026-01-04 10:00:00"
+                ]
+            },
+            "status": 409
+        }
+        or : {
+                 "success": true,
+                 "message": "Lecture started.",
+                 "data": {
+                     "id": 14,
+                     "assignment_id": 2,
+                     "section_id": 4,
+                     "course_id": 3,
+                     "instructor_id": 2,
+                     "scheduled_date": "2025-12-29",
+                     "starts_at": "2025-12-29 16:50:00",
+                     "ends_at": "2025-12-29 18:50:00",
+                     "status": "running",
+                     "lecture_no": 2,
+                     "ended_at": null,
+                     "created_at": "2025-12-22 13:50:28",
+                     "updated_at": "2025-12-29 17:25:51"
+                 },
+                 "errors": [],
+                 "status": 200
+             }
+
+
+http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/end end lecture
+{
+    "success": true,
+    "message": "Lecture ended.",
+    "data": {
+        "id": 14,
+        "assignment_id": 2,
+        "section_id": 4,
+        "course_id": 3,
+        "instructor_id": 2,
+        "scheduled_date": "2025-12-29",
+        "starts_at": "2025-12-29 16:50:00",
+        "ends_at": "2025-12-29 18:50:00",
+        "status": "ended",
+        "lecture_no": 2,
+        "ended_at": "2025-12-29 17:27:16",
+        "created_at": "2025-12-22 13:50:28",
+        "updated_at": "2025-12-29 17:27:16"
+    },
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/attendance-live
+{
+    "success": true,
+    "message": "Live attendance list.",
+    "data": [],
+    "errors": [],
+    "status": 200
+}
+Teacher Interaction(Questions)
+http://127.0.0.1:8000/api/teacher/questions create question (TRUE/FALSE)
+body :{
+  "lecture_id": {{lecture_id}},
+  "type": "true_false",
+  "question_text": "Laravel is a PHP framework.",
+  "points": 1,
+  "correct_index": 0
+}
+response :
+{
+    "success": true,
+    "message": "Question created.",
+    "data": {
+        "id": 1,
+        "lecture_id": 14,
+        "teacher_id": 2,
+        "type": "true_false",
+        "question_text": "Laravel is a PHP framework.",
+        "points": 1,
+        "is_active": 1,
+        "created_at": "2025-12-29T14:30:47.000000Z",
+        "updated_at": "2025-12-29T14:30:47.000000Z",
+        "options": [
+            {
+                "id": 1,
+                "question_id": 1,
+                "option_text": "True",
+                "is_correct": 1,
+                "created_at": "2025-12-29T14:30:47.000000Z",
+                "updated_at": "2025-12-29T14:30:47.000000Z"
+            },
+            {
+                "id": 2,
+                "question_id": 1,
+                "option_text": "False",
+                "is_correct": 0,
+                "created_at": "2025-12-29T14:30:47.000000Z",
+                "updated_at": "2025-12-29T14:30:47.000000Z"
+            }
+        ],
+        "lecture": {
+            "id": 14,
+            "assignment_id": 2,
+            "section_id": 4,
+            "course_id": 3,
+            "instructor_id": 2,
+            "scheduled_date": "2025-12-29",
+            "starts_at": "2025-12-29 16:50:00",
+            "ends_at": "2025-12-29 18:50:00",
+            "status": "ended",
+            "lecture_no": 2,
+            "ended_at": "2025-12-29 17:27:16",
+            "created_at": "2025-12-22 13:50:28",
+            "updated_at": "2025-12-29 17:27:16"
+        }
+    },
+    "errors": [],
+    "status": 201
+}
+http://127.0.0.1:8000/api/teacher/questions (SHORT)
+body : {
+  "lecture_id": {{lecture_id}},
+  "type": "short",
+  "question_text": "Explain briefly what an API is.",
+  "points": 5
+}
+response : {
+               "success": true,
+               "message": "Question created.",
+               "data": {
+                   "id": 2,
+                   "lecture_id": 14,
+                   "teacher_id": 2,
+                   "type": "short",
+                   "question_text": "Explain briefly what an API is.",
+                   "points": 5,
+                   "is_active": 1,
+                   "created_at": "2025-12-29T14:31:57.000000Z",
+                   "updated_at": "2025-12-29T14:31:57.000000Z",
+                   "options": [],
+                   "lecture": {
+                       "id": 14,
+                       "assignment_id": 2,
+                       "section_id": 4,
+                       "course_id": 3,
+                       "instructor_id": 2,
+                       "scheduled_date": "2025-12-29",
+                       "starts_at": "2025-12-29 16:50:00",
+                       "ends_at": "2025-12-29 18:50:00",
+                       "status": "ended",
+                       "lecture_no": 2,
+                       "ended_at": "2025-12-29 17:27:16",
+                       "created_at": "2025-12-22 13:50:28",
+                       "updated_at": "2025-12-29 17:27:16"
+                   }
+               },
+               "errors": [],
+               "status": 201
+           }
+
+           http://127.0.0.1:8000/api/teacher/questions CREATE QUESTION (mcq)
+           {
+             "lecture_id": {{lecture_id}},
+             "type": "mcq",
+             "question_text": "What is 2 + 2?",
+             "points": 2,
+             "options": [
+               {"text": "3"},
+               {"text": "4"},
+               {"text": "5"}
+             ],
+             "correct_index": 1
+           }
+           response : {
+                          "success": true,
+                          "message": "Question created.",
+                          "data": {
+                              "id": 3,
+                              "lecture_id": 14,
+                              "teacher_id": 2,
+                              "type": "mcq",
+                              "question_text": "What is 2 + 2?",
+                              "points": 2,
+                              "is_active": 1,
+                              "created_at": "2025-12-29T14:33:02.000000Z",
+                              "updated_at": "2025-12-29T14:33:02.000000Z",
+                              "options": [
+                                  {
+                                      "id": 3,
+                                      "question_id": 3,
+                                      "option_text": "3",
+                                      "is_correct": 0,
+                                      "created_at": "2025-12-29T14:33:02.000000Z",
+                                      "updated_at": "2025-12-29T14:33:02.000000Z"
+                                  },
+                                  {
+                                      "id": 4,
+                                      "question_id": 3,
+                                      "option_text": "4",
+                                      "is_correct": 1,
+                                      "created_at": "2025-12-29T14:33:02.000000Z",
+                                      "updated_at": "2025-12-29T14:33:02.000000Z"
+                                  },
+                                  {
+                                      "id": 5,
+                                      "question_id": 3,
+                                      "option_text": "5",
+                                      "is_correct": 0,
+                                      "created_at": "2025-12-29T14:33:02.000000Z",
+                                      "updated_at": "2025-12-29T14:33:02.000000Z"
+                                  }
+                              ],
+                              "lecture": {
+                                  "id": 14,
+                                  "assignment_id": 2,
+                                  "section_id": 4,
+                                  "course_id": 3,
+                                  "instructor_id": 2,
+                                  "scheduled_date": "2025-12-29",
+                                  "starts_at": "2025-12-29 16:50:00",
+                                  "ends_at": "2025-12-29 18:50:00",
+                                  "status": "ended",
+                                  "lecture_no": 2,
+                                  "ended_at": "2025-12-29 17:27:16",
+                                  "created_at": "2025-12-22 13:50:28",
+                                  "updated_at": "2025-12-29 17:27:16"
+                              }
+                          },
+                          "errors": [],
+                          "status": 201
+                      }
+                      http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/questions list questions by lecture
+                      {
+                          "success": true,
+                          "message": "Questions list.",
+                          "data": [
+                              {
+                                  "id": 3,
+                                  "lecture_id": 14,
+                                  "teacher_id": 2,
+                                  "type": "mcq",
+                                  "question_text": "What is 2 + 2?",
+                                  "points": 2,
+                                  "is_active": 1,
+                                  "created_at": "2025-12-29T14:33:02.000000Z",
+                                  "updated_at": "2025-12-29T14:33:02.000000Z",
+                                  "options": [
+                                      {
+                                          "id": 3,
+                                          "question_id": 3,
+                                          "option_text": "3",
+                                          "is_correct": 0,
+                                          "created_at": "2025-12-29T14:33:02.000000Z",
+                                          "updated_at": "2025-12-29T14:33:02.000000Z"
+                                      },
+                                      {
+                                          "id": 4,
+                                          "question_id": 3,
+                                          "option_text": "4",
+                                          "is_correct": 1,
+                                          "created_at": "2025-12-29T14:33:02.000000Z",
+                                          "updated_at": "2025-12-29T14:33:02.000000Z"
+                                      },
+                                      {
+                                          "id": 5,
+                                          "question_id": 3,
+                                          "option_text": "5",
+                                          "is_correct": 0,
+                                          "created_at": "2025-12-29T14:33:02.000000Z",
+                                          "updated_at": "2025-12-29T14:33:02.000000Z"
+                                      }
+                                  ]
+                              },
+                              {
+                                  "id": 2,
+                                  "lecture_id": 14,
+                                  "teacher_id": 2,
+                                  "type": "short",
+                                  "question_text": "Explain briefly what an API is.",
+                                  "points": 5,
+                                  "is_active": 1,
+                                  "created_at": "2025-12-29T14:31:57.000000Z",
+                                  "updated_at": "2025-12-29T14:31:57.000000Z",
+                                  "options": []
+                              },
+                              {
+                                  "id": 1,
+                                  "lecture_id": 14,
+                                  "teacher_id": 2,
+                                  "type": "true_false",
+                                  "question_text": "Laravel is a PHP framework.",
+                                  "points": 1,
+                                  "is_active": 1,
+                                  "created_at": "2025-12-29T14:30:47.000000Z",
+                                  "updated_at": "2025-12-29T14:30:47.000000Z",
+                                  "options": [
+                                      {
+                                          "id": 1,
+                                          "question_id": 1,
+                                          "option_text": "True",
+                                          "is_correct": 1,
+                                          "created_at": "2025-12-29T14:30:47.000000Z",
+                                          "updated_at": "2025-12-29T14:30:47.000000Z"
+                                      },
+                                      {
+                                          "id": 2,
+                                          "question_id": 1,
+                                          "option_text": "False",
+                                          "is_correct": 0,
+                                          "created_at": "2025-12-29T14:30:47.000000Z",
+                                          "updated_at": "2025-12-29T14:30:47.000000Z"
+                                      }
+                                  ]
+                              }
+                          ],
+                          "errors": [],
+                          "status": 200
+                      }
+
+                      http://127.0.0.1:8000/api/teacher/questions/publish publish question (create publication) need a listener
+                      body :
+                      {
+                        "question_id": {{question_id}},
+                        "lecture_id": {{lecture_id}},
+                        "expires_at": "2025-12-25 11:55:00"
+                      }
+
+                       response : {
+                                      "success": true,
+                                      "message": "Question published.",
+                                      "data": {
+                                          "id": 3,
+                                          "question_id": 4,
+                                          "lecture_id": 47,
+                                          "published_at": "2025-12-29T15:23:20.000000Z",
+                                          "expires_at": "2025-12-29T15:28:20.000000Z",
+                                          "status": "published",
+                                          "created_at": "2025-12-29T15:23:20.000000Z",
+                                          "updated_at": "2025-12-29T15:23:20.000000Z",
+                                          "question": {
+                                              "id": 4,
+                                              "lecture_id": 47,
+                                              "teacher_id": 4,
+                                              "type": "true_false",
+                                              "question_text": "Laravel is a PHP framework.",
+                                              "points": 1,
+                                              "is_active": 1,
+                                              "created_at": "2025-12-29T15:12:33.000000Z",
+                                              "updated_at": "2025-12-29T15:12:33.000000Z",
+                                              "options": [
+                                                  {
+                                                      "id": 6,
+                                                      "question_id": 4,
+                                                      "option_text": "True",
+                                                      "is_correct": 1,
+                                                      "created_at": "2025-12-29T15:12:33.000000Z",
+                                                      "updated_at": "2025-12-29T15:12:33.000000Z"
+                                                  },
+                                                  {
+                                                      "id": 7,
+                                                      "question_id": 4,
+                                                      "option_text": "False",
+                                                      "is_correct": 0,
+                                                      "created_at": "2025-12-29T15:12:33.000000Z",
+                                                      "updated_at": "2025-12-29T15:12:33.000000Z"
+                                                  }
+                                              ]
+                                          },
+                                          "answers": []
+                                      },
+                                      "errors": [],
+                                      "status": 201
+                                  }
+
+                                http://127.0.0.1:8000/api/teacher/publications/{{publication_id}}/close close publication
+
+                                {
+                                    "success": true,
+                                    "message": "Publication closed.",
+                                    "data": {
+                                        "id": 4,
+                                        "question_id": 4,
+                                        "lecture_id": 47,
+                                        "published_at": "2025-12-29T15:26:46.000000Z",
+                                        "expires_at": "2025-12-29T15:31:46.000000Z",
+                                        "status": "closed",
+                                        "created_at": "2025-12-29T15:26:46.000000Z",
+                                        "updated_at": "2025-12-29T15:31:53.000000Z",
+                                        "question": {
+                                            "id": 4,
+                                            "lecture_id": 47,
+                                            "teacher_id": 4,
+                                            "type": "true_false",
+                                            "question_text": "Laravel is a PHP framework.",
+                                            "points": 1,
+                                            "is_active": 1,
+                                            "created_at": "2025-12-29T15:12:33.000000Z",
+                                            "updated_at": "2025-12-29T15:12:33.000000Z",
+                                            "options": [
+                                                {
+                                                    "id": 6,
+                                                    "question_id": 4,
+                                                    "option_text": "True",
+                                                    "is_correct": 1,
+                                                    "created_at": "2025-12-29T15:12:33.000000Z",
+                                                    "updated_at": "2025-12-29T15:12:33.000000Z"
+                                                },
+                                                {
+                                                    "id": 7,
+                                                    "question_id": 4,
+                                                    "option_text": "False",
+                                                    "is_correct": 0,
+                                                    "created_at": "2025-12-29T15:12:33.000000Z",
+                                                    "updated_at": "2025-12-29T15:12:33.000000Z"
+                                                }
+                                            ]
+                                        },
+                                        "answers": []
+                                    },
+                                    "errors": [],
+                                    "status": 200
+                                }
+                    http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/interaction-report get interaction report
+                    {
+                        "success": true,
+                        "message": "Interaction report.",
+                        "data": {
+                            "summary": {
+                                "publications_count": 4,
+                                "answers_count": 0,
+                                "total_score_awarded": 0
+                            },
+                            "by_student": []
+                        },
+                        "errors": [],
+                        "status": 200
+                    }
+                    CHAT
+                    http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/chat get chat (need event listener)
+                 {
+                     "success": true,
+                     "message": "Chat messages.",
+                     "data": [
+                         {
+                             "id": 1,
+                             "lecture_id": 1,
+                             "user_id": 5,
+                             "message": "Hi teacher!",
+                             "sent_at": "2025-12-30 14:18:15",
+                             "created_at": "2025-12-30 14:18:15",
+                             "updated_at": "2025-12-30 14:18:15",
+                             "user": {
+                                 "id": 5,
+                                 "full_name": "Student 1",
+                                 "role": "student"
+                             }
+                         },
+                         {
+                             "id": 2,
+                             "lecture_id": 1,
+                             "user_id": 4,
+                             "message": "Hello class!",
+                             "sent_at": "2025-12-30 14:20:31",
+                             "created_at": "2025-12-30 14:20:31",
+                             "updated_at": "2025-12-30 14:20:31",
+                             "user": {
+                                 "id": 4,
+                                 "full_name": "Teacher 3",
+                                 "role": "teacher"
+                             }
+                         }
+                     ],
+                     "errors": [],
+                     "status": 200
+                 }
+                    http://127.0.0.1:8000/api/teacher/lectures/{{lecture_id}}/chat send message (teacher)
+                    body :
+                    {
+                      "message": "Hello class!"
+                    }
+                    response :
+                    {
+                        "success": true,
+                        "message": "Message sent.",
+                        "data": {
+                            "lecture_id": 47,
+                            "user_id": 4,
+                            "message": "Hello class!",
+                            "sent_at": "2025-12-29 18:35:36",
+                            "updated_at": "2025-12-29 18:35:36",
+                            "created_at": "2025-12-29 18:35:36",
+                            "id": 1,
+                            "user": {
+                                "id": 4,
+                                "full_name": "Teacher 3",
+                                "role": "teacher"
+                            }
+                        },
+                        "errors": [],
+                        "status": 201
+                    }
+Student - Attendance
+
+http://127.0.0.1:8000/api/teacher/lectures/8/attendance-live live Attendance (polling)
+
+{
+    "success": true,
+    "message": "Live attendance list.",
+    "data": [],
+    "errors": [],
+    "status": 200
+}
+Student - Attendance + HeartBeat
+http://127.0.0.1:8000/api/student/attendance/token issue attendance token
+{
+  "lecture_id": 8
+} this will be a listed so student can choose a lecture and attande it
+response :
+{
+    "success": true,
+    "message": "Attendance token issued.",
+    "data": {
+        "token": "eyJpdiI6IlJleG16clVGcDhrbHExSnVZS1hVRVE9PSIsInZhbHVlIjoieGtDeit3di9yeFJOc2h0OGhJSXpscTN1NjhYY2pmWEZYTVNqV2kvOE1pSGdZN0JhQ1RycytEbCtXMWwxYStZUHlMSU5sN3gvUjJBb3J5dSs1RDlrNUE9PSIsIm1hYyI6IjFjNGEyNmNlZDZhYzdmNDEyNzJlZGMxMjAzMmEyYmU4YzEyMTk4ODhlZGNmNTQ3NzBiNGMwOTUxMmQzYzcyOWIiLCJ0YWciOiIifQ==",
+        "expires_at": "2025-12-22 14:29:57"
+    },
+    "errors": [],
+    "status": 200
+}
+
+{
+               "success": false,
+               "message": "You can only attend during lecture time.",
+               "data": [],
+               "errors": [],
+               "status": 403
+           }
+           http://127.0.0.1:8000/api/student/attendance/heartbeat use attendance token var that was generated by http://127.0.0.1:8000/api/student/attendance/token so by using an action listener that capture the any movmement inside from the student and he capture it it send the token directly every
+           10 minutes and when student enter a lecture should make heart beat with generated token in order to attende
+
+http://127.0.0.1:8000/api/student/lectures/{{lecture_id}}/active-questions active questions for lecture
+{
+    "success": true,
+    "message": "Active questions.",
+    "data": [
+        {
+            "id": 1,
+            "question_id": 1,
+            "lecture_id": 1,
+            "published_at": "2025-12-30T11:10:24.000000Z",
+            "expires_at": "2025-12-30T11:15:24.000000Z",
+            "status": "published",
+            "created_at": "2025-12-30T11:10:24.000000Z",
+            "updated_at": "2025-12-30T11:10:24.000000Z",
+            "question": {
+                "id": 1,
+                "lecture_id": 1,
+                "teacher_id": 4,
+                "type": "true_false",
+                "question_text": "Laravel is a PHP framework.",
+                "points": 1,
+                "is_active": 1,
+                "created_at": "2025-12-30T11:09:25.000000Z",
+                "updated_at": "2025-12-30T11:09:25.000000Z",
+                "options": [
+                    {
+                        "id": 1,
+                        "question_id": 1,
+                        "option_text": "True",
+                        "is_correct": 1,
+                        "created_at": "2025-12-30T11:09:25.000000Z",
+                        "updated_at": "2025-12-30T11:09:25.000000Z"
+                    },
+                    {
+                        "id": 2,
+                        "question_id": 1,
+                        "option_text": "False",
+                        "is_correct": 0,
+                        "created_at": "2025-12-30T11:09:25.000000Z",
+                        "updated_at": "2025-12-30T11:09:25.000000Z"
+                    }
+                ]
+            }
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+http://127.0.0.1:8000/api/student/answers answer mcq/true false question
+body : {
+         "publication_id": {{publication_id}},
+         "selected_option_id": {{selected_option_id}}
+       }
+       response :
+       {
+           "success": true,
+           "message": "Answer saved.",
+           "data": {
+               "publication_id": 1,
+               "student_id": 5,
+               "question_id": 1,
+               "selected_option_id": 1,
+               "answer_text": null,
+               "is_correct": true,
+               "score": 1,
+               "answered_at": "2025-12-30T11:12:06.000000Z",
+               "updated_at": "2025-12-30T11:12:06.000000Z",
+               "created_at": "2025-12-30T11:12:06.000000Z",
+               "id": 1,
+               "student": {
+                   "id": 5,
+                   "full_name": "Student 1"
+               },
+               "publication": {
+                   "id": 1,
+                   "lecture_id": 1
+               },
+               "question": {
+                   "id": 1,
+                   "type": "true_false",
+                   "points": 1
+               }
+           },
+           "errors": [],
+           "status": 200
+       }
+       http://127.0.0.1:8000/api/student/answers Answer short
+       body :
+       {
+         "publication_id": {{publication_id}},
+         "answer_text": "An API is a set of rules that allows systems to communicate."
+       }
+       response
+       since this api is only for short question only {
+           "success": false,
+           "message": "selected_option_id is required.",
+           "data": [],
+           "errors": {
+               "selected_option_id": [
+                   "Required for mcq/true_false"
+               ]
+           },
+           "status": 422
+       }
+       if the question is short question type then response is
+       {
+           "success": true,
+           "message": "Answer saved.",
+           "data": {
+               "publication_id": 2,
+               "student_id": 5,
+               "question_id": 2,
+               "selected_option_id": null,
+               "answer_text": "An API is a set of rules that allows systems to communicate.",
+               "is_correct": null,
+               "score": 0,
+               "answered_at": "2025-12-30T11:15:13.000000Z",
+               "updated_at": "2025-12-30T11:15:13.000000Z",
+               "created_at": "2025-12-30T11:15:13.000000Z",
+               "id": 2,
+               "student": {
+                   "id": 5,
+                   "full_name": "Student 1"
+               },
+               "publication": {
+                   "id": 2,
+                   "lecture_id": 1
+               },
+               "question": {
+                   "id": 2,
+                   "type": "short",
+                   "points": 5
+               }
+           },
+           "errors": [],
+           "status": 200
+       }
+       http://127.0.0.1:8000/api/student/lectures/{{lecture_id}}/chat get lecture chat should refresh automatically
+       {
+           "success": true,
+           "message": "Chat messages.",
+           "data": [],
+           "errors": [],
+           "status": 200
+       }
+       http://127.0.0.1:8000/api/student/lectures/{{lecture_id}}/chat post request send message (student)
+body : {
+  "message": "Hi teacher!"
+}
+reponse :
+{
+    "success": true,
+    "message": "Message sent.",
+    "data": {
+        "lecture_id": 1,
+        "user_id": 5,
+        "message": "Hi teacher!",
+        "sent_at": "2025-12-30 14:23:21",
+        "updated_at": "2025-12-30 14:23:21",
+        "created_at": "2025-12-30 14:23:21",
+        "id": 3,
+        "user": {
+            "id": 5,
+            "full_name": "Student 1",
+            "role": "student"
+        }
+    },
+    "errors": [],
+    "status": 201
+}
+
+
+ http://127.0.0.1:8000/api/student/lectures/week get lecutres for student for a week
+ {
+     "success": true,
+     "message": "Student week lectures.",
+     "data": [],
+     "errors": [],
+     "status": 200
+ }
+
+
+
+
+
+
+
+
+
+
+
+ http://127.0.0.1:8000/api/student/lectures/today get the lectures of today for student
+  Teacher Lecture list + control
+  http://127.0.0.1:8000/api/teacher/lectures/week get teacher weekly lectures
+  {
+      "success": true,
+      "message": "Teacher week lectures.",
+      "data": [],
+      "errors": [],
+      "status": 200
+  }
+  http://127.0.0.1:8000/api/teacher/lectures/today get today's lecture for teacher
+{
+    "success": true,
+    "message": "Teacher today lectures.",
+    "data": [],
+    "errors": [],
+    "status": 200
+} this the response
+http://127.0.0.1:8000/api/teacher/lectures/8/start set lecture running because each lecture has 4 status : scheduled , running , ended , canceled
+{
+    "success": true,
+    "message": "Lecture started.",
+    "data": {
+        "id": 8,
+        "assignment_id": 1,
+        "section_id": 3,
+        "course_id": 2,
+        "instructor_id": 2,
+        "scheduled_date": "2026-02-08T00:00:00.000000Z",
+        "starts_at": "2026-02-08T10:00:00.000000Z",
+        "ends_at": "2026-02-08T12:00:00.000000Z",
+        "status": "running",
+        "lecture_no": 8,
+        "ended_at": null,
+        "created_at": "2025-12-22T12:59:29.000000Z",
+        "updated_at": "2025-12-22T13:22:28.000000Z"
+    },
+    "errors": [],
+    "status": 200
+}
+
+http://127.0.0.1:8000/api/student/lectures/{{lecture_id}}/active-questions get active question
+{
+    "success": true,
+    "message": "Active questions.",
+    "data": [
+        {
+            "id": 2,
+            "question_id": 2,
+            "lecture_id": 1,
+            "published_at": "2025-12-30T11:14:48.000000Z",
+            "expires_at": "2025-12-30T11:19:48.000000Z",
+            "status": "published",
+            "created_at": "2025-12-30T11:14:48.000000Z",
+            "updated_at": "2025-12-30T11:14:48.000000Z",
+            "question": {
+                "id": 2,
+                "lecture_id": 1,
+                "teacher_id": 4,
+                "type": "short",
+                "question_text": "Explain briefly what an API is.",
+                "points": 5,
+                "is_active": 1,
+                "created_at": "2025-12-30T11:14:27.000000Z",
+                "updated_at": "2025-12-30T11:14:27.000000Z",
+                "options": []
+            }
+        },
+        {
+            "id": 1,
+            "question_id": 1,
+            "lecture_id": 1,
+            "published_at": "2025-12-30T11:10:24.000000Z",
+            "expires_at": "2025-12-30T11:15:24.000000Z",
+            "status": "published",
+            "created_at": "2025-12-30T11:10:24.000000Z",
+            "updated_at": "2025-12-30T11:10:24.000000Z",
+            "question": {
+                "id": 1,
+                "lecture_id": 1,
+                "teacher_id": 4,
+                "type": "true_false",
+                "question_text": "Laravel is a PHP framework.",
+                "points": 1,
+                "is_active": 1,
+                "created_at": "2025-12-30T11:09:25.000000Z",
+                "updated_at": "2025-12-30T11:09:25.000000Z",
+                "options": [
+                    {
+                        "id": 1,
+                        "question_id": 1,
+                        "option_text": "True",
+                        "is_correct": 1,
+                        "created_at": "2025-12-30T11:09:25.000000Z",
+                        "updated_at": "2025-12-30T11:09:25.000000Z"
+                    },
+                    {
+                        "id": 2,
+                        "question_id": 1,
+                        "option_text": "False",
+                        "is_correct": 0,
+                        "created_at": "2025-12-30T11:09:25.000000Z",
+                        "updated_at": "2025-12-30T11:09:25.000000Z"
+                    }
+                ]
+            }
+        }
+    ],
+    "errors": [],
+    "status": 200
+}
+
+
+
+23 directories
+.
+├── ./assets
+│   ├── ./assets/css
+│   │   ├── ./assets/css/paper-dashboard.css
+│   │   ├── ./assets/css/paper-dashboard.css.map
+│   │   └── ./assets/css/paper-dashboard.min.css
+│   ├── ./assets/demo
+│   │   └── ./assets/demo/demo.css
+│   ├── ./assets/fonts
+│   │   ├── ./assets/fonts/nucleo-icons.eot
+│   │   ├── ./assets/fonts/nucleo-icons.ttf
+│   │   ├── ./assets/fonts/nucleo-icons.woff
+│   │   └── ./assets/fonts/nucleo-icons.woff2
+│   ├── ./assets/github
+│   │   ├── ./assets/github/paper-dashboard-react-dashboard-page.png
+│   │   ├── ./assets/github/paper-dashboard-react.gif
+│   │   ├── ./assets/github/paper-dashboard-react-maps-page.png
+│   │   ├── ./assets/github/paper-dashboard-react-notifications-page.png
+│   │   ├── ./assets/github/paper-dashboard-react-table-page.png
+│   │   └── ./assets/github/paper-dashboard-react-user-page.png
+│   ├── ./assets/img
+│   │   ├── ./assets/img/apple-icon.png
+│   │   ├── ./assets/img/bg5.jpg
+│   │   ├── ./assets/img/damir-bosnjak.jpg
+│   │   ├── ./assets/img/default-avatar.png
+│   │   ├── ./assets/img/faces
+│   │   │   ├── ./assets/img/faces/ayo-ogunseinde-1.jpg
+│   │   │   ├── ./assets/img/faces/ayo-ogunseinde-2.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-1.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-2.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-3.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-4.jpg
+│   │   │   ├── ./assets/img/faces/erik-lucatero-1.jpg
+│   │   │   ├── ./assets/img/faces/erik-lucatero-2.jpg
+│   │   │   ├── ./assets/img/faces/joe-gardner-1.jpg
+│   │   │   ├── ./assets/img/faces/joe-gardner-2.jpg
+│   │   │   ├── ./assets/img/faces/kaci-baum-1.jpg
+│   │   │   └── ./assets/img/faces/kaci-baum-2.jpg
+│   │   ├── ./assets/img/favicon.png
+│   │   ├── ./assets/img/header.jpg
+│   │   ├── ./assets/img/jan-sendereks.jpg
+│   │   ├── ./assets/img/logo-small.png
+│   │   └── ./assets/img/mike.jpg
+│   └── ./assets/scss
+│       ├── ./assets/scss/paper-dashboard
+│       │   ├── ./assets/scss/paper-dashboard/_alerts.scss
+│       │   ├── ./assets/scss/paper-dashboard/_animated-buttons.scss
+│       │   ├── ./assets/scss/paper-dashboard/_buttons.scss
+│       │   ├── ./assets/scss/paper-dashboard/cards
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-chart.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-map.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-plain.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-stats.scss
+│       │   │   └── ./assets/scss/paper-dashboard/cards/_card-user.scss
+│       │   ├── ./assets/scss/paper-dashboard/_cards.scss
+│       │   ├── ./assets/scss/paper-dashboard/_checkboxes-radio.scss
+│       │   ├── ./assets/scss/paper-dashboard/_dropdown.scss
+│       │   ├── ./assets/scss/paper-dashboard/_fixed-plugin.scss
+│       │   ├── ./assets/scss/paper-dashboard/_footers.scss
+│       │   ├── ./assets/scss/paper-dashboard/_images.scss
+│       │   ├── ./assets/scss/paper-dashboard/_inputs.scss
+│       │   ├── ./assets/scss/paper-dashboard/_misc.scss
+│       │   ├── ./assets/scss/paper-dashboard/mixins
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_buttons.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_cards.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_dropdown.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_inputs.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_page-header.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_transparency.scss
+│       │   │   └── ./assets/scss/paper-dashboard/mixins/_vendor-prefixes.scss
+│       │   ├── ./assets/scss/paper-dashboard/_mixins.scss
+│       │   ├── ./assets/scss/paper-dashboard/_navbar.scss
+│       │   ├── ./assets/scss/paper-dashboard/_nucleo-outline.scss
+│       │   ├── ./assets/scss/paper-dashboard/_page-header.scss
+│       │   ├── ./assets/scss/paper-dashboard/plugins
+│       │   │   ├── ./assets/scss/paper-dashboard/plugins/_plugin-animate-bootstrap-notify.scss
+│       │   │   └── ./assets/scss/paper-dashboard/plugins/_plugin-perfect-scrollbar.scss
+│       │   ├── ./assets/scss/paper-dashboard/react
+│       │   │   ├── ./assets/scss/paper-dashboard/react/custom
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_alerts.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_buttons.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_checkboxes-radio.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_dropdown.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_fixed-plugin.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_inputs.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_navbar.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_nucleo-outline.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_responsive.scss
+│       │   │   │   └── ./assets/scss/paper-dashboard/react/custom/_typography.scss
+│       │   │   └── ./assets/scss/paper-dashboard/react/react-differences.scss
+│       │   ├── ./assets/scss/paper-dashboard/_responsive.scss
+│       │   ├── ./assets/scss/paper-dashboard/_sidebar-and-main-panel.scss
+│       │   ├── ./assets/scss/paper-dashboard/_tables.scss
+│       │   ├── ./assets/scss/paper-dashboard/_typography.scss
+│       │   └── ./assets/scss/paper-dashboard/_variables.scss
+│       └── ./assets/scss/paper-dashboard.scss
+├── ./components
+│   ├── ./components/FixedPlugin
+│   │   └── ./components/FixedPlugin/FixedPlugin.js
+│   ├── ./components/Footer
+│   │   └── ./components/Footer/Footer.js
+│   ├── ./components/Navbars
+│   │   └── ./components/Navbars/DemoNavbar.js
+│   └── ./components/Sidebar
+│       └── ./components/Sidebar/Sidebar.js
+├── ./index.js
+├── ./layouts
+│   └── ./layouts/Admin.js
+├── ./logo.svg
+├── ./logo-white.svg
+├── ./routes.js
+├── ./tree.txt
+├── ./variables
+│   ├── ./variables/charts.js
+│   ├── ./variables/general.js
+│   └── ./variables/icons.js
+└── ./views
+    ├── ./views/Dashboard.js
+    ├── ./views/Icons.js
+    ├── ./views/Map.js
+    ├── ./views/Notifications.js
+    ├── ./views/Tables.js
+    ├── ./views/Typography.js
+    ├── ./views/Upgrade.js
+    └── ./views/User.js
+
+1️⃣ معلومات عامة
+
+Backend: Laravel 10
+
+Auth: Sanctum
+
+Realtime: Pusher
+
+API Base URL
+
+2️⃣ Authentication
+
+استخدام Bearer Token
+
+التوكن يجي من login
+
+3️⃣ Realtime – Pusher (مهم جداً)
+
+
+PUSHER_APP_KEY=caa0b3a54bbb24eb22fa
+
+PUSHER_APP_CLUSTER=eu
+
+
+4️⃣ القنوات (Channels)
+🔒 private-teacher.{teacherId}
+
+للأستاذ فقط
+
+attendance.updated
+
+answer.submitted
+
+🔒 private-lecture.{lectureId}
+
+لطلاب + أستاذ المحاضرة
+
+chat.message.sent
+
+question.published
+
+question.closed
+
+5️⃣ الشات
+
+لكل محاضرة شات خاص
+
+Realtime
+
+الطالب يشوف الرسائل فقط
+
+ما بيشوف أجوبة زملائه
+
+6️⃣ الأسئلة والتفاعل
+
+الأستاذ ينشر السؤال → يوصل فوراً
+
+الطالب يجاوب
+
+الجواب يروح Realtime للأستاذ فقط
+
+الطلاب ما بيشوفوا بعض
+
+7️⃣ الحضور
+
+Token + Heartbeat
+
+تحديث فوري للأستاذ
+
+Live attendance
+ask me question before proceeding
+and use notystack for the whole project
+Channel: private-lecture.1, Event: chat.message.sent
+11:23:22
+{
+  "message": {
+    "id": 3,
+    "lecture_id": 1,
+    "message": "Hi teacher!",
+    "sent_at": "2025-12-30 14:23:21",
+    "user": {
+      "id": 5,
+      "full_name": "Student 1",
+      "role": "student"
+    }
+  }
+}
+API message
+Channel: private-lecture.1, Event: chat.message.sent
+11:20:31
+{
+  "message": {
+    "id": 2,
+    "lecture_id": 1,
+    "message": "Hello class!",
+    "sent_at": "2025-12-30 14:20:31",
+    "user": {
+      "id": 4,
+      "full_name": "Teacher 3",
+      "role": "teacher"
+    }
+  }
+}
+API message
+Channel: private-lecture.1, Event: chat.message.sent
+11:18:16
+API message
+Channel: private-teacher.4, Event: attendance.updated
+11:16:39
+{
+  "lecture_id": 1,
+  "student": {
+    "id": 5,
+    "full_name": "Student 1",
+    "email": "student1@uni.test"
+  },
+  "joined_at": "2025-12-30 14:16:39",
+  "last_seen_at": "2025-12-30 14:16:39"
+}

@@ -1,0 +1,152 @@
+.
+├── assets
+│   ├── css
+│   ├── demo
+│   ├── fonts
+│   ├── github
+│   ├── img
+│   │   └── faces
+│   └── scss
+│       └── paper-dashboard
+│           ├── cards
+│           ├── mixins
+│           ├── plugins
+│           └── react
+│               └── custom
+├── components
+│   ├── FixedPlugin
+│   ├── Footer
+│   ├── Navbars
+│   └── Sidebar
+├── layouts
+├── variables
+└── views
+
+23 directories
+.
+├── ./assets
+│   ├── ./assets/css
+│   │   ├── ./assets/css/paper-dashboard.css
+│   │   ├── ./assets/css/paper-dashboard.css.map
+│   │   └── ./assets/css/paper-dashboard.min.css
+│   ├── ./assets/demo
+│   │   └── ./assets/demo/demo.css
+│   ├── ./assets/fonts
+│   │   ├── ./assets/fonts/nucleo-icons.eot
+│   │   ├── ./assets/fonts/nucleo-icons.ttf
+│   │   ├── ./assets/fonts/nucleo-icons.woff
+│   │   └── ./assets/fonts/nucleo-icons.woff2
+│   ├── ./assets/github
+│   │   ├── ./assets/github/paper-dashboard-react-dashboard-page.png
+│   │   ├── ./assets/github/paper-dashboard-react.gif
+│   │   ├── ./assets/github/paper-dashboard-react-maps-page.png
+│   │   ├── ./assets/github/paper-dashboard-react-notifications-page.png
+│   │   ├── ./assets/github/paper-dashboard-react-table-page.png
+│   │   └── ./assets/github/paper-dashboard-react-user-page.png
+│   ├── ./assets/img
+│   │   ├── ./assets/img/apple-icon.png
+│   │   ├── ./assets/img/bg5.jpg
+│   │   ├── ./assets/img/damir-bosnjak.jpg
+│   │   ├── ./assets/img/default-avatar.png
+│   │   ├── ./assets/img/faces
+│   │   │   ├── ./assets/img/faces/ayo-ogunseinde-1.jpg
+│   │   │   ├── ./assets/img/faces/ayo-ogunseinde-2.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-1.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-2.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-3.jpg
+│   │   │   ├── ./assets/img/faces/clem-onojeghuo-4.jpg
+│   │   │   ├── ./assets/img/faces/erik-lucatero-1.jpg
+│   │   │   ├── ./assets/img/faces/erik-lucatero-2.jpg
+│   │   │   ├── ./assets/img/faces/joe-gardner-1.jpg
+│   │   │   ├── ./assets/img/faces/joe-gardner-2.jpg
+│   │   │   ├── ./assets/img/faces/kaci-baum-1.jpg
+│   │   │   └── ./assets/img/faces/kaci-baum-2.jpg
+│   │   ├── ./assets/img/favicon.png
+│   │   ├── ./assets/img/header.jpg
+│   │   ├── ./assets/img/jan-sendereks.jpg
+│   │   ├── ./assets/img/logo-small.png
+│   │   └── ./assets/img/mike.jpg
+│   └── ./assets/scss
+│       ├── ./assets/scss/paper-dashboard
+│       │   ├── ./assets/scss/paper-dashboard/_alerts.scss
+│       │   ├── ./assets/scss/paper-dashboard/_animated-buttons.scss
+│       │   ├── ./assets/scss/paper-dashboard/_buttons.scss
+│       │   ├── ./assets/scss/paper-dashboard/cards
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-chart.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-map.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-plain.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/cards/_card-stats.scss
+│       │   │   └── ./assets/scss/paper-dashboard/cards/_card-user.scss
+│       │   ├── ./assets/scss/paper-dashboard/_cards.scss
+│       │   ├── ./assets/scss/paper-dashboard/_checkboxes-radio.scss
+│       │   ├── ./assets/scss/paper-dashboard/_dropdown.scss
+│       │   ├── ./assets/scss/paper-dashboard/_fixed-plugin.scss
+│       │   ├── ./assets/scss/paper-dashboard/_footers.scss
+│       │   ├── ./assets/scss/paper-dashboard/_images.scss
+│       │   ├── ./assets/scss/paper-dashboard/_inputs.scss
+│       │   ├── ./assets/scss/paper-dashboard/_misc.scss
+│       │   ├── ./assets/scss/paper-dashboard/mixins
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_buttons.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_cards.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_dropdown.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_inputs.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_page-header.scss
+│       │   │   ├── ./assets/scss/paper-dashboard/mixins/_transparency.scss
+│       │   │   └── ./assets/scss/paper-dashboard/mixins/_vendor-prefixes.scss
+│       │   ├── ./assets/scss/paper-dashboard/_mixins.scss
+│       │   ├── ./assets/scss/paper-dashboard/_navbar.scss
+│       │   ├── ./assets/scss/paper-dashboard/_nucleo-outline.scss
+│       │   ├── ./assets/scss/paper-dashboard/_page-header.scss
+│       │   ├── ./assets/scss/paper-dashboard/plugins
+│       │   │   ├── ./assets/scss/paper-dashboard/plugins/_plugin-animate-bootstrap-notify.scss
+│       │   │   └── ./assets/scss/paper-dashboard/plugins/_plugin-perfect-scrollbar.scss
+│       │   ├── ./assets/scss/paper-dashboard/react
+│       │   │   ├── ./assets/scss/paper-dashboard/react/custom
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_alerts.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_buttons.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_checkboxes-radio.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_dropdown.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_fixed-plugin.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_inputs.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_navbar.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_nucleo-outline.scss
+│       │   │   │   ├── ./assets/scss/paper-dashboard/react/custom/_responsive.scss
+│       │   │   │   └── ./assets/scss/paper-dashboard/react/custom/_typography.scss
+│       │   │   └── ./assets/scss/paper-dashboard/react/react-differences.scss
+│       │   ├── ./assets/scss/paper-dashboard/_responsive.scss
+│       │   ├── ./assets/scss/paper-dashboard/_sidebar-and-main-panel.scss
+│       │   ├── ./assets/scss/paper-dashboard/_tables.scss
+│       │   ├── ./assets/scss/paper-dashboard/_typography.scss
+│       │   └── ./assets/scss/paper-dashboard/_variables.scss
+│       └── ./assets/scss/paper-dashboard.scss
+├── ./components
+│   ├── ./components/FixedPlugin
+│   │   └── ./components/FixedPlugin/FixedPlugin.js
+│   ├── ./components/Footer
+│   │   └── ./components/Footer/Footer.js
+│   ├── ./components/Navbars
+│   │   └── ./components/Navbars/DemoNavbar.js
+│   └── ./components/Sidebar
+│       └── ./components/Sidebar/Sidebar.js
+├── ./index.js
+├── ./layouts
+│   └── ./layouts/Admin.js
+├── ./logo.svg
+├── ./logo-white.svg
+├── ./routes.js
+├── ./tree.txt
+├── ./variables
+│   ├── ./variables/charts.js
+│   ├── ./variables/general.js
+│   └── ./variables/icons.js
+└── ./views
+    ├── ./views/Dashboard.js
+    ├── ./views/Icons.js
+    ├── ./views/Map.js
+    ├── ./views/Notifications.js
+    ├── ./views/Tables.js
+    ├── ./views/Typography.js
+    ├── ./views/Upgrade.js
+    └── ./views/User.js
+
+23 directories, 102 files

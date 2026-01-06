@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Your Pusher Channels</title>
+    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+</head>
+<body>
+<h1>Test Your Pusher Channels</h1>
+
+<div>
+    <h3>Step 1: Set Test Token</h3>
+    <input type="text" id="tokenInput" placeholder="Enter access_token from localStorage" style="width: 300px; padding: 5px;">
+    <button onclick="setToken()">Set Token</button>
+    <div id="tokenStatus"></div>
+</div>
+
+<hr>
+
+<div>
+    <h3>Step 2: Test Connection</h3>
+    <button onclick="testPublicChannel()">Test Public Channel</button>
+    <button onclick="testTeacherChannel()">Test Teacher Channel</button>
+    <button onclick="testLectureChannel()">Test Lecture Channel</button>
+</div>
+
+<hr>
+
+<div>
+    <h3>Step 3: Logs</h3>
+    <div id="logs" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; font-family: monospace;"></div>
+</div>
+
+<hr>
+
+<div>
+    <h3>Step 4: Trigger Test Events from Laravel</h3>
+    <p>Open Laravel Tinker and run these commands:</p>
+    <pre>
+# Test 1: Public event
+event(new \App\Events\TestEvent());
+
+# Test 2: Teacher event (replace 1 with teacher_id)
+$teacherId = 1;
+broadcast(new \App\Events\AttendanceUpdated([
+    'student' => ['id' => 1, 'full_name' => 'Test Student'],
+    'last_seen_at' => now(),
+    'joined_at' => now(),
+    'teacher_id' => $teacherId
+]))->toPrivateChannel("private-teacher.{$teacherId}");
+
+# Test 3: Lecture event (replace 37 with lecture_id)
+$lectureId = 37;
+broadcast(new \App\Events\ChatMessageSent([
+    'message' => 'Test message',
+    'user' => ['id' => 1, 'full_name' => 'Test User']
+]))->toPrivateChannel("private-lecture.{$lectureId}");
+        </pre>
+</div>
+
+<script>
+    let pusher = null;
+    let channels = {};
+
+    // Enable logging
+    Pusher.logToConsole = true;
+
+    // Add to log
+    function addLog(message, type = 'info') {
+        const logsDiv = document.getElementById('logs');
+        const timestamp = new Date().toLocaleTimeString();
+        const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+        logsDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+    }
+
+    // Set token from input
+    function setToken() {
+        const token = document.getElementById('tokenInput').value;
+        if (token) {
+            localStorage.setItem('access_token', token);
+            document.getElementById('tokenStatus').innerHTML =
+                `<span style="color: green">✅ Token set: ${token.substring(0, 20)}...</span>`;
+            addLog('Token set successfully', 'success');
+        } else {
+            document.getElementById('tokenStatus').innerHTML =
+                '<span style="color: red">❌ Please enter a token</span>';
+        }
+    }
+
+    // Initialize Pusher with auth
+    function initPusher() {
+        const token = localStorage.getItem('access_token');
+
+        if (!token) {
+            addLog('❌ No access_token found in localStorage', 'error');
+            return null;
+        }
+
+        try {
+            addLog('Initializing Pusher with token...');
+
+            pusher = new Pusher('caa0b3a54bbb24eb22fa', {
+                cluster: 'eu',
+                forceTLS: true,
+                authEndpoint: 'http://127.0.0.1:8000/broadcasting/auth',
+                auth: {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                }
+            });
+
+            // Connection listeners
+            pusher.connection.bind('connecting', () => {
+                addLog('🔄 Connecting to Pusher...');
+            });
+
+            pusher.connection.bind('connected', () => {
+                addLog('✅ Pusher connected successfully!', 'success');
+            });
+
+            pusher.connection.bind('disconnected', () => {
+                addLog('❌ Pusher disconnected', 'error');
+            });
+
+            pusher.connection.bind('error', (err) => {
+                addLog(`❌ Pusher error: ${JSON.stringify(err)}`, 'error');
+            });
+
+            return pusher;
+
+        } catch (error) {
+            addLog(`❌ Failed to initialize Pusher: ${error.message}`, 'error');
+            return null;
+        }
+    }
+
+    // Test public channel (no auth needed)
+    function testPublicChannel() {
+        addLog('Testing public channel...');
+
+        const publicPusher = new Pusher('caa0b3a54bbb24eb22fa', {
+            cluster: 'eu'
+        });
+
+        const publicChannel = publicPusher.subscribe('my-channel');
+
+        publicChannel.bind('pusher:subscription_succeeded', () => {
+            addLog('✅ Subscribed to public channel (my-channel)', 'success');
+        });
+
+        publicChannel.bind('pusher:subscription_error', (status) => {
+            addLog(`❌ Public channel subscription error: ${JSON.stringify(status)}`, 'error');
+        });
+
+        publicChannel.bind('my-event', (data) => {
+            addLog(`📨 Received my-event: ${JSON.stringify(data)}`, 'success');
+            alert(`Public event: ${JSON.stringify(data)}`);
+        });
+    }
+
+    // Test teacher channel (needs auth)
+    function testTeacherChannel() {
+        addLog('Testing teacher channel...');
+
+        if (!pusher) {
+            pusher = initPusher();
+            if (!pusher) return;
+        }
+
+        const teacherId = prompt('Enter teacher ID (e.g., 1):', '1');
+        if (!teacherId) return;
+
+        const channelName = `private-teacher.${teacherId}`;
+        addLog(`Subscribing to: ${channelName}`);
+
+        try {
+            const teacherChannel = pusher.subscribe(channelName);
+            channels.teacher = teacherChannel;
+
+            teacherChannel.bind('pusher:subscription_succeeded', () => {
+                addLog(`✅ Subscribed to teacher channel: ${channelName}`, 'success');
+            });
+
+            teacherChannel.bind('pusher:subscription_error', (status) => {
+                addLog(`❌ Teacher channel subscription error: ${JSON.stringify(status)}`, 'error');
+            });
+
+            // Listen for your custom events
+            teacherChannel.bind('.attendance.updated', (data) => {
+                addLog(`📨 Received attendance.updated: ${JSON.stringify(data)}`, 'success');
+                alert(`Attendance updated: ${JSON.stringify(data)}`);
+            });
+
+            teacherChannel.bind('.answer.submitted', (data) => {
+                addLog(`📨 Received answer.submitted: ${JSON.stringify(data)}`, 'success');
+                alert(`Answer submitted: ${JSON.stringify(data)}`);
+            });
+
+            teacherChannel.bind('pusher:member_added', (member) => {
+                addLog(`👤 Member added: ${JSON.stringify(member)}`);
+            });
+
+            teacherChannel.bind('pusher:member_removed', (member) => {
+                addLog(`👤 Member removed: ${JSON.stringify(member)}`);
+            });
+
+        } catch (error) {
+            addLog(`❌ Failed to subscribe: ${error.message}`, 'error');
+        }
+    }
+
+    // Test lecture channel (needs auth)
+    function testLectureChannel() {
+        addLog('Testing lecture channel...');
+
+        if (!pusher) {
+            pusher = initPusher();
+            if (!pusher) return;
+        }
+
+        const lectureId = prompt('Enter lecture ID (e.g., 37):', '37');
+        if (!lectureId) return;
+
+        const channelName = `private-lecture.${lectureId}`;
+        addLog(`Subscribing to: ${channelName}`);
+
+        try {
+            const lectureChannel = pusher.subscribe(channelName);
+            channels.lecture = lectureChannel;
+
+            lectureChannel.bind('pusher:subscription_succeeded', () => {
+                addLog(`✅ Subscribed to lecture channel: ${channelName}`, 'success');
+            });
+
+            lectureChannel.bind('pusher:subscription_error', (status) => {
+                addLog(`❌ Lecture channel subscription error: ${JSON.stringify(status)}`, 'error');
+            });
+
+            // Listen for your custom events
+            lectureChannel.bind('.chat.message.sent', (data) => {
+                addLog(`📨 Received chat.message.sent: ${JSON.stringify(data)}`, 'success');
+                alert(`Chat message: ${JSON.stringify(data)}`);
+            });
+
+            lectureChannel.bind('.question.published', (data) => {
+                addLog(`📨 Received question.published: ${JSON.stringify(data)}`, 'success');
+                alert(`Question published: ${JSON.stringify(data)}`);
+            });
+
+            lectureChannel.bind('.question.closed', (data) => {
+                addLog(`📨 Received question.closed: ${JSON.stringify(data)}`, 'success');
+                alert(`Question closed: ${JSON.stringify(data)}`);
+            });
+
+        } catch (error) {
+            addLog(`❌ Failed to subscribe: ${error.message}`, 'error');
+        }
+    }
+
+    // Initialize on load
+    window.onload = function() {
+        addLog('Test page loaded');
+        addLog('Step 1: Get your access_token from localStorage in your React app');
+        addLog('Step 2: Paste it in the input field above');
+        addLog('Step 3: Click "Set Token" then test channels');
+
+        // Try to auto-get token from localStorage if available
+        const autoToken = localStorage.getItem('access_token');
+        if (autoToken) {
+            document.getElementById('tokenInput').value = autoToken;
+            addLog(`Found existing token: ${autoToken.substring(0, 20)}...`, 'success');
+        }
+    };
+</script>
+</body>
+</html>
