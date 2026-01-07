@@ -153,8 +153,13 @@ Route::middleware(['auth:sanctum','role:teacher'])->prefix('teacher')->group(fun
     // Teacher Interaction
     Route::post('questions', [LectureQuestionController::class,'store']);               // create question
     Route::get('lectures/{lectureId}/questions', [LectureQuestionController::class,'index']); // list questions
+    Route::get('lectures/{lectureId}/questions/{questionId}', [LectureQuestionController::class,'showQuestion']);
     Route::post('questions/publish', [LectureQuestionController::class,'publish']);     // publish => creates publication
     Route::post('publications/{id}/close', [LectureQuestionController::class,'close']); // close publication
+
+    // publications list + details
+    Route::get('lectures/{lectureId}/publications', [LectureQuestionController::class,'publicationsIndex']);
+    Route::get('lectures/{lectureId}/publications/{publicationId}', [LectureQuestionController::class,'publicationShow']);
 
     Route::get('lectures/{lectureId}/interaction-report', [LectureInteractionReportController::class,'show']);
 

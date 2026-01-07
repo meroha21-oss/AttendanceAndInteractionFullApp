@@ -11,6 +11,13 @@ class LectureQuestionRepository
         return \App\Models\LectureQuestion::with(['options','lecture'])->find($id);
     }
 
+    public function findByLecture(int $lectureId, int $questionId){
+        return \App\Models\LectureQuestion::with(['options'])
+            ->where('lecture_id', $lectureId)
+            ->where('id', $questionId)
+            ->first();
+    }
+
     public function listByLecture(int $lectureId){
         return \App\Models\LectureQuestion::with('options')
             ->where('lecture_id',$lectureId)->orderByDesc('id')->get();

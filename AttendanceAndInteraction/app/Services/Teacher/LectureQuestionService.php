@@ -166,4 +166,110 @@ class LectureQuestionService
             return $this->unifiedResponse(false,'Something went wrong.',[],['exception'=>$e->getMessage()],500);
         }
     }
+
+
+    public function showQuestion(int $lectureId, int $questionId, $teacher)
+    {
+        try{
+            $lecture = Lecture::find($lectureId);
+            if(!$lecture) return $this->unifiedResponse(false,'Lecture not found.',[],[],404);
+            if((int)$lecture->instructor_id !== (int)$teacher->id) return $this->unifiedResponse(false,'Not allowed.',[],[],403);
+
+            $q = $this->qRepo->findByLecture($lectureId, $questionId);
+            if(!$q) return $this->unifiedResponse(false,'Question not found for this lecture.',[],[],404);
+
+            return $this->unifiedResponse(true,'Question details.', $q);
+        }catch(Throwable $e){
+            return $this->unifiedResponse(false,'Something went wrong.',[],['exception'=>$e->getMessage()],500);
+        }
+    }
+
+
+    public function listPublications(int $lectureId, $teacher, ?string $status = null)
+    {
+        try{
+            $lecture = Lecture::find($lectureId);
+            if(!$lecture) return $this->unifiedResponse(false,'Lecture not found.',[],[],404);
+            if((int)$lecture->instructor_id !== (int)$teacher->id) return $this->unifiedResponse(false,'Not allowed.',[],[],403);
+
+            $pubs = $this->pRepo->listByLecture($lectureId, $status);
+
+            $now = Carbon::now();
+            $data = $pubs->map(function($pub) use ($now){
+                return $this->formatPublicationWithTime($pub, $now);
+            })->values();
+
+            return $this->unifiedResponse(true,'Publications list.', $data);
+        }catch(Throwable $e){
+            return $this->unifiedResponse(false,'Something went wrong.',[],['exception'=>$e->getMessage()],500);
+        }
+    }
+
+    public function showPublication(int $lectureId, int $publicationId, $teacher)
+    {
+        try{
+            $lecture = Lecture::find($lectureId);
+            if(!$lecture) return $this->unifiedResponse(false,'Lecture not found.',[],[],404);
+            if((int)$lecture->instructor_id !== (int)$teacher->id) return $this->unifiedResponse(false,'Not allowed.',[],[],403);
+
+            $pub = $this->pRepo->findByLecture($lectureId, $publicationId);
+            if(!$pub) return $this->unifiedResponse(false,'Publication not found for this lecture.',[],[],404);
+
+            $now = Carbon::now();
+            $data = $this->formatPublicationWithTime($pub, $now, true);
+
+            return $this->unifiedResponse(true,'Publication details.', $data);
+        }catch(Throwable $e){
+            return $this->unifiedResponse(false,'Something went wrong.',[],['exception'=>$e->getMessage()],500);
+        }
+    }
+
+    private function formatPublicationWithTime($pub, Carbon $now, bool $includeAnswers = false): array
+    {
+        $expiresAt = $pub->expires_at ? Carbon::parse($pub->expires_at) : null;
+
+        $isExpired = $expiresAt ? $now->greaterThan($expiresAt) : false;
+        $timeLeftSeconds = $expiresAt ? max(0, $now->diffInSeconds($expiresAt, false)) : null;
+
+        $base = [
+            'publication' => [
+                'id' => $pub->id,
+                'lecture_id' => $pub->lecture_id,
+                'status' => $pub->status,
+                'published_at' => optional($pub->published_at)->toDateTimeString(),
+                'expires_at' => optional($pub->expires_at)->toDateTimeString(),
+                'is_expired' => $isExpired,
+                'time_left_seconds' => $timeLeftSeconds,
+            ],
+            'question' => [
+                'id' => $pub->question?->id,
+                'type' => $pub->question?->type,
+                'question_text' => $pub->question?->question_text,
+                'points' => $pub->question?->points,
+                'options' => $pub->question?->options?->map(fn($o)=>[
+                    'id' => $o->id,
+                    'text' => $o->option_text,
+                ])->values() ?? [],
+            ],
+        ];
+
+        if($includeAnswers){
+            $base['answers'] = $pub->answers?->map(function($a){
+                return [
+                    'id' => $a->id,
+                    'student' => [
+                        'id' => $a->student_id,
+                        'full_name' => $a->student?->full_name,
+                    ],
+                    'selected_option_id' => $a->selected_option_id,
+                    'answer_text' => $a->answer_text,
+                    'is_correct' => $a->is_correct,
+                    'score' => $a->score,
+                    'answered_at' => optional($a->answered_at)->toDateTimeString(),
+                ];
+            })->values() ?? [];
+        }
+
+        return $base;
+    }
 }
