@@ -91,7 +91,7 @@ class AttendanceService
             ]
         );
 
-//         event(new \App\Events\LiveAttendanceUpdated($hb));
+        event(new \App\Events\LiveAttendanceUpdated($hb));
 
 
         Attendance::updateOrCreate(

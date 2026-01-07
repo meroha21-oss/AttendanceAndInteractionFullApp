@@ -137,7 +137,7 @@ class LectureQuestionService
                 'status' => 'published',
             ]);
 
-//             event(new \App\Events\QuestionPublished($pub));
+            event(new \App\Events\QuestionPublished($pub));
 
 
             return $this->unifiedResponse(true,'Question published.', $this->pRepo->find($pub->id), [], 201);
@@ -158,7 +158,7 @@ class LectureQuestionService
             $pub->status = 'closed';
             $pub->save();
 
-//             event(new \App\Events\QuestionClosed($pub));
+            event(new \App\Events\QuestionClosed($pub));
 
 
             return $this->unifiedResponse(true,'Publication closed.', $this->pRepo->find($pub->id));
