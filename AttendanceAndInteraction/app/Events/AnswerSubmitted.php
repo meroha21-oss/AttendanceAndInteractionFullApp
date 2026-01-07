@@ -3,7 +3,7 @@
 namespace App\Events;
 
 use App\Models\QuestionAnswer;
-use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Queue\SerializesModels;
 
@@ -28,7 +28,7 @@ class AnswerSubmitted implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [new PrivateChannel('teacher.' . $this->teacherId)];
+        return [new Channel('teacher.' . $this->teacherId)];
     }
 
     public function broadcastAs(): string

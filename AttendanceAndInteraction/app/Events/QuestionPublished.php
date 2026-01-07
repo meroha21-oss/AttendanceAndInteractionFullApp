@@ -3,7 +3,7 @@
 namespace App\Events;
 
 use App\Models\QuestionPublication;
-use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Queue\SerializesModels;
 
@@ -18,7 +18,7 @@ class QuestionPublished implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [new PrivateChannel('lecture.' . $this->publication->lecture_id)];
+        return [new Channel('lecture.' . $this->publication->lecture_id)];
     }
 
     public function broadcastAs(): string
