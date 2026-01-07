@@ -51,31 +51,54 @@ const StudentLectureAttend = () => {
     const handleQuestionPublished = useCallback((data) => {
         console.log('✅ Question published (student):', data);
 
+        // Check if data has the expected structure
+        if (!data) return;
+
+        // Extract publication data
+        const publicationData = data.publication || data;
+        const questionData = data.question || {};
+
+        // Get publication ID
+        const publicationId = publicationData.id;
+
+        if (!publicationId) {
+            console.error('❌ No publication ID found in question data:', data);
+            return;
+        }
+
+        // Normalize options to use option_text (some APIs send 'text', some send 'option_text')
+        const normalizedOptions = (questionData.options || []).map(option => ({
+            id: option.id,
+            option_text: option.option_text || option.text || 'Option', // Handle both 'option_text' and 'text'
+            is_correct: option.is_correct || false
+        }));
+
         const newQuestion = {
-            ...data,
-            id: data.id || `pub-${Date.now()}`,
+            id: publicationId,
+            publication_id: publicationId,
             status: 'published',
-            published_at: data.published_at || new Date().toISOString(),
-            expires_at: data.expires_at || new Date(Date.now() + 5 * 60000).toISOString(),
-            question: data.question || {
-                id: data.question_id,
-                question_text: data.question_text || 'Question text not available',
-                type: data.type || 'mcq',
-                points: data.points || 1,
-                options: data.options || []
+            published_at: publicationData.published_at || new Date().toISOString(),
+            expires_at: publicationData.expires_at || new Date(Date.now() + 5 * 60000).toISOString(),
+            question: {
+                id: questionData.id,
+                question_text: questionData.question_text || 'Question text not available',
+                type: questionData.type || 'mcq',
+                points: questionData.points || 1,
+                options: normalizedOptions
             }
         };
 
+        console.log('🔄 Processed question for state:', newQuestion);
+
         setActiveQuestions(prev => {
-            // تجنب التكرار
+            // Avoid duplicates by checking publication_id
             const exists = prev.find(q =>
-                q.id === newQuestion.id ||
-                (q.question_id === newQuestion.question_id && q.status === 'published')
+                q.publication_id === newQuestion.publication_id
             );
 
             if (exists) {
                 return prev.map(q =>
-                    q.id === newQuestion.id ? newQuestion : q
+                    q.publication_id === newQuestion.publication_id ? newQuestion : q
                 );
             }
 
@@ -92,9 +115,30 @@ const StudentLectureAttend = () => {
     const handleQuestionClosed = useCallback((data) => {
         console.log('✅ Question closed (student):', data);
 
-        setActiveQuestions(prev => prev.filter(q =>
-            q.id !== data.id && q.question_id !== data.question_id
-        ));
+        // Extract publication ID from data - based on the real-time structure you provided
+        let publicationId = null;
+
+        if (data.publication_id) {
+            publicationId = data.publication_id;
+        } else if (data.id) {
+            publicationId = data.id;
+        }
+
+        if (!publicationId) {
+            console.error('❌ No publication ID found in close data:', data);
+            return;
+        }
+
+        // Instead of removing the question, update its status to 'closed'
+        setActiveQuestions(prev => prev.map(question => {
+            if (question.publication_id === publicationId) {
+                return {
+                    ...question,
+                    status: 'closed'
+                };
+            }
+            return question;
+        }));
 
         enqueueSnackbar('تم إغلاق السؤال', {
             variant: 'info',
@@ -107,20 +151,20 @@ const StudentLectureAttend = () => {
         console.log('✅ Chat message (student):', data);
 
         setChatMessages(prev => {
-            // تجنب تكرار الرسائل
-            const exists = prev.find(m =>
-                m.id === data.message?.id ||
-                (m.user?.id === data.message?.user?.id && m.sent_at === data.message?.sent_at)
-            );
+            // Avoid duplicate messages
+            const messageId = data.message?.id || data.id;
+            const exists = prev.find(m => m.id === messageId);
 
             if (exists) return prev;
 
-            return [...prev, {
+            const newMessage = {
                 ...(data.message || data),
-                user: data.user || { full_name: 'Unknown', role: 'teacher' },
-                sent_at: data.sent_at || new Date().toISOString(),
-                id: data.message?.id || `msg-${Date.now()}`
-            }];
+                user: data.user || data.message?.user || { full_name: 'Unknown', role: 'teacher' },
+                sent_at: data.sent_at || data.message?.sent_at || new Date().toISOString(),
+                id: messageId || `msg-${Date.now()}`
+            };
+
+            return [...prev, newMessage];
         });
     }, []);
 
@@ -140,6 +184,20 @@ const StudentLectureAttend = () => {
                 anchorOrigin: { vertical: 'top', horizontal: 'left' }
             });
         }
+
+        // Remove the answered question from active questions
+        if (data.publication_id) {
+            setActiveQuestions(prev => prev.filter(q =>
+                q.publication_id !== data.publication_id
+            ));
+
+            // Clear selected answer
+            setSelectedAnswers(prev => {
+                const newAnswers = { ...prev };
+                delete newAnswers[data.publication_id];
+                return newAnswers;
+            });
+        }
     }, [enqueueSnackbar]);
 
     const handleLectureEnded = useCallback((data) => {
@@ -151,7 +209,7 @@ const StudentLectureAttend = () => {
             anchorOrigin: { vertical: 'top', horizontal: 'center' }
         });
 
-        // إلغاء interval الـ heartbeat
+        // Clear heartbeat interval
         if (heartbeatInterval) {
             clearInterval(heartbeatInterval);
             setHeartbeatInterval(null);
@@ -160,7 +218,18 @@ const StudentLectureAttend = () => {
         setTimeout(() => {
             navigate('/student/lectures/today');
         }, 3000);
-    }, [enqueueSnackbar, navigate]);
+    }, [enqueueSnackbar, navigate, heartbeatInterval]);
+
+    const handleRealtimeConnected = useCallback((status) => {
+        console.log('📡 Real-time connection status:', status);
+        setConnectionStatus(status);
+    }, []);
+
+    const handleRealtimeError = useCallback((error) => {
+        console.error('❌ Real-time error:', error);
+        setConnectionStatus('error');
+        enqueueSnackbar('خطأ في الاتصال المباشر', { variant: 'error' });
+    }, [enqueueSnackbar]);
 
     // ==================== Real-time Hook ====================
     useStudentLectureRealtime(lectureId, user?.id, {
@@ -169,15 +238,43 @@ const StudentLectureAttend = () => {
         onChatMessageSent: handleChatMessageSent,
         onAnswerSubmitted: handleAnswerSubmitted,
         onLectureEnded: handleLectureEnded,
-        onRealtimeConnected: (status) => setConnectionStatus(status),
-        onRealtimeError: () => setConnectionStatus('error')
+        onRealtimeConnected: handleRealtimeConnected,
+        onRealtimeError: handleRealtimeError
     });
 
     // ==================== API Functions ====================
     const fetchActiveQuestions = useCallback(async () => {
         try {
+            console.log('📥 Fetching active questions for lecture:', lectureId);
             const response = await callApi(() => lectureService.getStudentActiveQuestions(lectureId));
-            setActiveQuestions(response.data || []);
+            console.log('📊 Active questions response:', response.data);
+
+            // Transform the response to match our state structure with normalized options
+            const questions = (response.data || []).map(item => {
+                // Normalize options to use option_text
+                const normalizedOptions = (item.options || []).map(option => ({
+                    id: option.id,
+                    option_text: option.option_text || option.text || 'Option',
+                    is_correct: option.is_correct || false
+                }));
+
+                return {
+                    id: item.id || item.publication_id,
+                    publication_id: item.id || item.publication_id,
+                    status: item.status || 'published',
+                    published_at: item.published_at,
+                    expires_at: item.expires_at,
+                    question: {
+                        id: item.question_id,
+                        question_text: item.question_text || item.text,
+                        type: item.type,
+                        points: item.points,
+                        options: normalizedOptions
+                    }
+                };
+            });
+
+            setActiveQuestions(questions);
         } catch (error) {
             console.error('❌ Error fetching questions:', error);
             setActiveQuestions([]);
@@ -198,6 +295,7 @@ const StudentLectureAttend = () => {
     const fetchLectureData = useCallback(async () => {
         try {
             setLoading(true);
+            console.log('🚀 Fetching lecture data for ID:', lectureId);
 
             // Get lecture from today's lectures
             const lecturesResponse = await callApi(() => lectureService.getStudentTodayLectures());
@@ -210,6 +308,7 @@ const StudentLectureAttend = () => {
                 return;
             }
 
+            console.log('✅ Found lecture:', foundLecture);
             setLecture(foundLecture);
 
             // Check if lecture is running
@@ -226,6 +325,7 @@ const StudentLectureAttend = () => {
             ]);
 
         } catch (error) {
+            console.error('❌ Error fetching lecture data:', error);
             enqueueSnackbar('فشل تحميل بيانات المحاضرة', { variant: 'error' });
             navigate('/student/lectures/today');
         } finally {
@@ -242,15 +342,15 @@ const StudentLectureAttend = () => {
 
         fetchLectureData();
 
-        // تنظيف الـ interval عند unmount
+        // Cleanup interval on unmount
         return () => {
             if (heartbeatInterval) {
                 clearInterval(heartbeatInterval);
             }
         };
-    }, [lectureId, navigate, enqueueSnackbar, fetchLectureData]); // ✅ أضفت fetchLectureData هنا
+    }, [lectureId, navigate, enqueueSnackbar, fetchLectureData]);
 
-    // استخدام useEffect منفصل للتعامل مع heartbeatInterval
+    // Separate useEffect for heartbeatInterval cleanup
     useEffect(() => {
         return () => {
             if (heartbeatInterval) {
@@ -282,6 +382,7 @@ const StudentLectureAttend = () => {
             enqueueSnackbar('تم الانضمام إلى المحاضرة بنجاح!', { variant: 'success' });
 
         } catch (error) {
+            console.error('❌ Error joining lecture:', error);
             if (error.response?.status === 403) {
                 enqueueSnackbar('يمكنك الانضمام فقط خلال وقت المحاضرة.', { variant: 'error' });
             } else {
@@ -314,7 +415,6 @@ const StudentLectureAttend = () => {
 
         try {
             await callApi(() => chatService.sendStudentMessage(lectureId, newMessage), 'تم إرسال الرسالة');
-            // لا نحتاج لـ fetchChat هنا لأن الرسالة ستأتي عبر real-time
             setNewMessage('');
         } catch (error) {
             // Error is handled by useApi
@@ -327,39 +427,24 @@ const StudentLectureAttend = () => {
             return;
         }
 
+        console.log('📤 Submitting answer for publication:', publicationId);
+
         try {
             const answerData = {
-                publication_id: publicationId,
+                publication_id: parseInt(publicationId), // Ensure it's an integer
                 selected_option_id: selectedOptionId,
                 answer_text: answerText,
             };
 
+            console.log('📝 Answer data:', answerData);
+
             await callApi(() => questionService.submitAnswer(answerData), 'تم إرسال الإجابة بنجاح');
 
-            // Remove the answered question from active questions
-            setActiveQuestions(prev => prev.filter(q => q.id !== publicationId));
-
-            // Clear the selected answer
-            setSelectedAnswers(prev => {
-                const newAnswers = { ...prev };
-                delete newAnswers[publicationId];
-                return newAnswers;
-            });
+            // Note: The question will be removed via real-time event (handleAnswerSubmitted)
 
         } catch (error) {
-            // Error is handled by useApi
+            console.error('❌ Error submitting answer:', error);
         }
-    };
-
-    const handleLeaveLecture = () => {
-        // Clear heartbeat interval
-        if (heartbeatInterval) {
-            clearInterval(heartbeatInterval);
-            setHeartbeatInterval(null);
-        }
-
-        enqueueSnackbar('لقد غادرت المحاضرة', { variant: 'info' });
-        navigate('/student/lectures/today');
     };
 
     const calculateTimeLeft = (expiresAt) => {
@@ -463,7 +548,7 @@ const StudentLectureAttend = () => {
                             )}
                         </Button>
                     ) : (
-                        <Button color="danger" onClick={handleLeaveLecture}>
+                        <Button color="danger" onClick={() => navigate('/student/lectures/today')}>
                             <i className="ni ni-button-power mr-1"></i>
                             مغادرة المحاضرة
                         </Button>
@@ -525,10 +610,12 @@ const StudentLectureAttend = () => {
                                         activeQuestions.map((publication) => {
                                             const question = publication.question;
                                             const timeLeft = calculateTimeLeft(publication.expires_at);
-                                            const isActive = publication.status === 'published' && !timeLeft.isExpired;
+                                            const isClosed = publication.status === 'closed';
+                                            const isExpired = timeLeft.isExpired;
+                                            const isActive = !isClosed && !isExpired && publication.status === 'published';
 
                                             return (
-                                                <Card key={publication.id} className={`mb-3 border-left-${isActive ? 'warning' : 'secondary'} border-left-3`}>
+                                                <Card key={publication.publication_id} className={`mb-3 border-left-${isActive ? 'warning' : 'secondary'} border-left-3`}>
                                                     <CardBody>
                                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                                             <div>
@@ -542,11 +629,19 @@ const StudentLectureAttend = () => {
                                                                     <Badge color="success" className="mr-2">
                                                                         {question?.points || 0} نقطة
                                                                     </Badge>
-                                                                    {timeLeft.total > 0 && (
+                                                                    {isClosed ? (
+                                                                        <Badge color="danger" className="mr-2">
+                                                                            مغلق
+                                                                        </Badge>
+                                                                    ) : isExpired ? (
+                                                                        <Badge color="secondary" className="mr-2">
+                                                                            منتهي
+                                                                        </Badge>
+                                                                    ) : timeLeft.total > 0 ? (
                                                                         <Badge color="warning">
                                                                             {timeLeft.minutes}:{String(timeLeft.seconds).padStart(2, '0')} متبقي
                                                                         </Badge>
-                                                                    )}
+                                                                    ) : null}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -558,14 +653,17 @@ const StudentLectureAttend = () => {
                                                                         <Label check>
                                                                             <Input
                                                                                 type="radio"
-                                                                                name={`question-${publication.id}`}
-                                                                                checked={selectedAnswers[publication.id] === option.id}
+                                                                                name={`question-${publication.publication_id}`}
+                                                                                checked={selectedAnswers[publication.publication_id] === option.id}
                                                                                 onChange={() => {
-                                                                                    setSelectedAnswers(prev => ({
-                                                                                        ...prev,
-                                                                                        [publication.id]: option.id
-                                                                                    }));
+                                                                                    if (!isClosed && !isExpired) {
+                                                                                        setSelectedAnswers(prev => ({
+                                                                                            ...prev,
+                                                                                            [publication.publication_id]: option.id
+                                                                                        }));
+                                                                                    }
                                                                                 }}
+                                                                                disabled={isClosed || isExpired}
                                                                             />{' '}
                                                                             {option.option_text}
                                                                         </Label>
@@ -581,14 +679,17 @@ const StudentLectureAttend = () => {
                                                                         <Label check>
                                                                             <Input
                                                                                 type="radio"
-                                                                                name={`question-${publication.id}`}
-                                                                                checked={selectedAnswers[publication.id] === option.id}
+                                                                                name={`question-${publication.publication_id}`}
+                                                                                checked={selectedAnswers[publication.publication_id] === option.id}
                                                                                 onChange={() => {
-                                                                                    setSelectedAnswers(prev => ({
-                                                                                        ...prev,
-                                                                                        [publication.id]: option.id
-                                                                                    }));
+                                                                                    if (!isClosed && !isExpired) {
+                                                                                        setSelectedAnswers(prev => ({
+                                                                                            ...prev,
+                                                                                            [publication.publication_id]: option.id
+                                                                                        }));
+                                                                                    }
                                                                                 }}
+                                                                                disabled={isClosed || isExpired}
                                                                             />{' '}
                                                                             {option.option_text}
                                                                         </Label>
@@ -601,33 +702,63 @@ const StudentLectureAttend = () => {
                                                             <FormGroup>
                                                                 <Input
                                                                     type="textarea"
-                                                                    value={selectedAnswers[publication.id] || ''}
+                                                                    value={selectedAnswers[publication.publication_id] || ''}
                                                                     onChange={(e) => {
-                                                                        setSelectedAnswers(prev => ({
-                                                                            ...prev,
-                                                                            [publication.id]: e.target.value
-                                                                        }));
+                                                                        if (!isClosed && !isExpired) {
+                                                                            setSelectedAnswers(prev => ({
+                                                                                ...prev,
+                                                                                [publication.publication_id]: e.target.value
+                                                                            }));
+                                                                        }
                                                                     }}
                                                                     placeholder="اكتب إجابتك هنا..."
                                                                     rows="3"
+                                                                    disabled={isClosed || isExpired}
                                                                 />
                                                             </FormGroup>
                                                         )}
 
-                                                        <Button
-                                                            color="primary"
-                                                            onClick={() => {
-                                                                if (question?.type === 'short') {
-                                                                    handleAnswerQuestion(publication.id, null, selectedAnswers[publication.id]);
-                                                                } else {
-                                                                    handleAnswerQuestion(publication.id, selectedAnswers[publication.id]);
-                                                                }
-                                                            }}
-                                                            disabled={!selectedAnswers[publication.id]?.toString().trim()}
-                                                            className="mt-3"
-                                                        >
-                                                            إرسال الإجابة
-                                                        </Button>
+                                                        {isClosed ? (
+                                                            <Button
+                                                                color="secondary"
+                                                                disabled
+                                                                className="mt-3"
+                                                            >
+                                                                <i className="ni ni-fat-remove mr-1"></i>
+                                                                تم إغلاق السؤال
+                                                            </Button>
+                                                        ) : isExpired ? (
+                                                            <Button
+                                                                color="secondary"
+                                                                disabled
+                                                                className="mt-3"
+                                                            >
+                                                                <i className="ni ni-watch-time mr-1"></i>
+                                                                انتهى وقت السؤال
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                color="primary"
+                                                                onClick={() => {
+                                                                    if (question?.type === 'short') {
+                                                                        handleAnswerQuestion(
+                                                                            publication.publication_id,
+                                                                            null,
+                                                                            selectedAnswers[publication.publication_id]
+                                                                        );
+                                                                    } else {
+                                                                        handleAnswerQuestion(
+                                                                            publication.publication_id,
+                                                                            selectedAnswers[publication.publication_id]
+                                                                        );
+                                                                    }
+                                                                }}
+                                                                disabled={!selectedAnswers[publication.publication_id]?.toString().trim()}
+                                                                className="mt-3"
+                                                            >
+                                                                إرسال الإجابة
+                                                            </Button>
+                                                        )}
                                                     </CardBody>
                                                 </Card>
                                             );
