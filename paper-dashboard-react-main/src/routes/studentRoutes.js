@@ -17,18 +17,18 @@ const studentRoutes = [
         icon: "ni ni-calendar-grid-58 text-orange",
         layout: "",
     },
-    {
-        path: "/student/lecture/attend/:lectureId",
-        name: "Attend Lecture",
-        icon: "ni ni-check-bold text-green",
-        layout: "",
-    },
-    {
-        path: "/student/lecture/select",
-        name: "Select Lecture",
-        icon: "ni ni-check-bold text-green",
-        layout: "",
-    }
+    // {
+    //     path: "/student/lecture/attend/:lectureId",
+    //     name: "Attend Lecture",
+    //     icon: "ni ni-check-bold text-green",
+    //     layout: "",
+    // },
+    // {
+    //     path: "/student/lecture/select",
+    //     name: "Select Lecture",
+    //     icon: "ni ni-check-bold text-green",
+    //     layout: "",
+    // }
 ];
 
 export default studentRoutes;

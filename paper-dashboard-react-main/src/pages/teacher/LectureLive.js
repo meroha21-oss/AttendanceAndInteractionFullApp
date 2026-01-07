@@ -99,7 +99,7 @@ const LectureLive = () => {
             anchorOrigin: { vertical: 'top', horizontal: 'left' }
         });
 
-        // تحديث الأسئلة المنشورة بإضافة الإجابة
+        // Update published questions with the answer
         if (data.publication_id) {
             setPublishedQuestions(prev => prev.map(pub => {
                 if (pub.id === data.publication_id) {
@@ -128,70 +128,116 @@ const LectureLive = () => {
         console.log('✅ Chat message:', data);
 
         setChatMessages(prev => {
-            // تجنب تكرار الرسائل
-            const exists = prev.find(m =>
-                m.id === data.message?.id ||
-                (m.user?.id === data.message?.user?.id && m.sent_at === data.message?.sent_at)
-            );
+            // Avoid duplicate messages
+            const messageId = data.message?.id || data.id;
+            const exists = prev.find(m => m.id === messageId);
 
             if (exists) return prev;
 
-            return [...prev, {
+            const newMessage = {
                 ...(data.message || data),
-                user: data.user || { full_name: 'Unknown', role: 'student' },
-                sent_at: data.sent_at || new Date().toISOString(),
-                id: data.message?.id || `msg-${Date.now()}`
-            }];
+                user: data.user || data.message?.user || { full_name: 'Unknown', role: 'student' },
+                sent_at: data.sent_at || data.message?.sent_at || new Date().toISOString(),
+                id: messageId || `msg-${Date.now()}`
+            };
+
+            return [...prev, newMessage];
         });
     }, []);
 
     const handleQuestionPublished = useCallback((data) => {
         console.log('✅ Question published:', data);
 
+        // Check if data has the expected structure
+        if (!data) return;
+
+        // Extract publication ID from the data
+        let publicationId = null;
+        let questionData = null;
+
+        // Handle different possible data structures
+        if (data.publication_id) {
+            publicationId = data.publication_id;
+            questionData = data;
+        } else if (data.id && !data.id.toString().startsWith('pub-')) {
+            // Only use the id if it's not a temporary ID
+            publicationId = data.id;
+            questionData = data;
+        } else if (data.publication) {
+            publicationId = data.publication.id;
+            questionData = data.publication;
+        }
+
+        if (!publicationId) {
+            console.error('❌ No valid publication ID found in question data:', data);
+            return;
+        }
+
         const newPublication = {
-            ...data,
-            id: data.id || `pub-${Date.now()}`,
+            id: publicationId,
+            publication_id: publicationId,
+            question_id: data.question_id || questionData?.question_id,
             status: 'published',
-            published_at: data.published_at || new Date().toISOString(),
-            expires_at: data.expires_at || new Date(Date.now() + 5 * 60000).toISOString(),
-            question: data.question || {
-                id: data.question_id,
-                question_text: data.question_text || 'Question text not available',
-                type: data.type || 'mcq',
-                points: data.points || 1,
-                options: data.options || []
+            published_at: data.published_at || questionData?.published_at || new Date().toISOString(),
+            expires_at: data.expires_at || questionData?.expires_at || new Date(Date.now() + 5 * 60000).toISOString(),
+            // Extract question data
+            question: data.question || questionData?.question || {
+                id: data.question_id || questionData?.question_id,
+                question_text: data.question_text || questionData?.question_text || 'Question text not available',
+                type: data.type || questionData?.type || 'mcq',
+                points: data.points || questionData?.points || 1,
+                options: data.options || questionData?.options || []
             },
             answers: data.answers || []
         };
 
+        console.log('🔄 Processed publication for state:', newPublication);
+
         setPublishedQuestions(prev => {
-            // تجنب التكرار
+            // Avoid duplicates by checking publication_id
             const exists = prev.find(p =>
-                p.id === newPublication.id ||
-                (p.question_id === newPublication.question_id && p.status === 'published')
+                p.publication_id === newPublication.publication_id
             );
 
             if (exists) {
+                console.log('📝 Updating existing publication');
                 return prev.map(p =>
-                    p.id === newPublication.id ? newPublication : p
+                    p.publication_id === newPublication.publication_id ? newPublication : p
                 );
             }
 
-            return [newPublication, ...prev];
-        });
+            enqueueSnackbar('تم نشر سؤال جديد للطلاب', {
+                variant: 'success',
+                autoHideDuration: 3000,
+                anchorOrigin: { vertical: 'top', horizontal: 'left' }
+            });
 
-        enqueueSnackbar('تم نشر سؤال جديد للطلاب', {
-            variant: 'success',
-            autoHideDuration: 3000,
-            anchorOrigin: { vertical: 'top', horizontal: 'left' }
+            console.log('➕ Adding new publication to state');
+            return [newPublication, ...prev];
         });
     }, [enqueueSnackbar]);
 
     const handleQuestionClosed = useCallback((data) => {
         console.log('✅ Question closed:', data);
 
+        // Extract publication ID from data
+        let publicationId = null;
+
+        if (data.publication_id) {
+            publicationId = data.publication_id;
+        } else if (data.id && !data.id.toString().startsWith('pub-')) {
+            publicationId = data.id;
+        } else if (data.publication) {
+            publicationId = data.publication.id;
+        }
+
+        if (!publicationId) {
+            console.error('❌ No publication ID found in close data:', data);
+            return;
+        }
+
         setPublishedQuestions(prev => prev.map(pub => {
-            if (pub.id === data.id || pub.question_id === data.question_id) {
+            if (pub.publication_id === publicationId) {
                 return {
                     ...pub,
                     status: 'closed',
@@ -269,6 +315,17 @@ const LectureLive = () => {
         }, 3000);
     }, [enqueueSnackbar, lectureId, navigate]);
 
+    const handleRealtimeConnected = useCallback((status) => {
+        console.log('📡 Real-time connection status:', status);
+        setConnectionStatus(status);
+    }, []);
+
+    const handleRealtimeError = useCallback((error) => {
+        console.error('❌ Real-time error:', error);
+        setConnectionStatus('error');
+        enqueueSnackbar('خطأ في الاتصال المباشر', { variant: 'error' });
+    }, [enqueueSnackbar]);
+
     // ==================== Real-time Hook ====================
     useTeacherLectureRealtime(lectureId, user?.id, {
         onAttendanceUpdated: handleAttendanceUpdated,
@@ -279,8 +336,8 @@ const LectureLive = () => {
         onStudentJoined: handleStudentJoined,
         onStudentLeft: handleStudentLeft,
         onLectureEnded: handleLectureEnded,
-        onRealtimeConnected: () => setConnectionStatus('connected'),
-        onRealtimeError: () => setConnectionStatus('error')
+        onRealtimeConnected: handleRealtimeConnected,
+        onRealtimeError: handleRealtimeError
     });
 
     // ==================== API Functions ====================
@@ -316,8 +373,26 @@ const LectureLive = () => {
         try {
             const response = await callApi(() => lectureService.getPublishedQuestions(lectureId));
             if (response.data) {
-                setPublishedQuestions(response.data);
-                localStorage.setItem(`published_questions_${lectureId}`, JSON.stringify(response.data));
+                // Transform the response to ensure we have proper IDs
+                const transformedData = response.data.map(item => ({
+                    id: item.id,
+                    publication_id: item.id, // Ensure publication_id is set to the actual ID
+                    question_id: item.question_id,
+                    status: item.status || 'published',
+                    published_at: item.published_at,
+                    expires_at: item.expires_at,
+                    question: item.question || {
+                        id: item.question_id,
+                        question_text: item.question_text,
+                        type: item.type,
+                        points: item.points,
+                        options: item.options || []
+                    },
+                    answers: item.answers || []
+                }));
+
+                setPublishedQuestions(transformedData);
+                localStorage.setItem(`published_questions_${lectureId}`, JSON.stringify(transformedData));
             } else {
                 const savedQuestions = localStorage.getItem(`published_questions_${lectureId}`);
                 if (savedQuestions) {
@@ -363,7 +438,7 @@ const LectureLive = () => {
                     navigate('/teacher/dashboard');
                 }, 1000);
             } catch (error) {
-                // تم التعامل مع الخطأ بواسطة useApi
+                // Error is handled by useApi
             }
         }
     }, [callApi, lectureId, navigate]);
@@ -458,7 +533,7 @@ const LectureLive = () => {
             await callApi(() => chatService.sendTeacherMessage(lectureId, newMessage), 'تم إرسال الرسالة');
             setNewMessage('');
         } catch (error) {
-            // تم التعامل مع الخطأ بواسطة useApi
+            // Error is handled by useApi
         }
     };
 
@@ -501,7 +576,7 @@ const LectureLive = () => {
             }, 1000);
 
         } catch (error) {
-            // تم التعامل مع الخطأ بواسطة useApi
+            // Error is handled by useApi
         }
     };
 
@@ -513,21 +588,45 @@ const LectureLive = () => {
             const publicationData = {
                 question_id: questionId,
                 lecture_id: parseInt(lectureId),
-                expires_at: expiresAt.toISOString().slice(0, 19).replace('T', ' '),
+                expires_at: expiresAt.toISOString(),
             };
+
+            console.log('📤 Publishing question:', publicationData);
 
             await callApi(() => questionService.publish(publicationData), 'تم نشر السؤال للطلاب');
 
         } catch (error) {
-            // تم التعامل مع الخطأ بواسطة useApi
+            console.error('❌ Error publishing question:', error);
         }
     };
 
     const handleCloseQuestion = async (publicationId) => {
         try {
-            await callApi(() => questionService.closeQuestion(publicationId), 'تم إغلاق السؤال');
+            console.log('🔒 Closing question with publication ID:', publicationId);
+
+            // Make sure publicationId is a number, not a string like "pub-123"
+            const numericPublicationId = parseInt(publicationId);
+            if (isNaN(numericPublicationId)) {
+                enqueueSnackbar('معرّف النشر غير صالح', { variant: 'error' });
+                return;
+            }
+
+            await callApi(() => questionService.closeQuestion(numericPublicationId), 'تم إغلاق السؤال');
+
+            // Update the question status locally immediately
+            setPublishedQuestions(prev => prev.map(pub => {
+                if (pub.publication_id === numericPublicationId || pub.id === numericPublicationId) {
+                    return {
+                        ...pub,
+                        status: 'closed',
+                        closed_at: new Date().toISOString()
+                    };
+                }
+                return pub;
+            }));
+
         } catch (error) {
-            // تم التعامل مع الخطأ بواسطة useApi
+            console.error('❌ Error closing question:', error);
         }
     };
 
@@ -536,7 +635,10 @@ const LectureLive = () => {
             try {
                 const activeQuestions = publishedQuestions.filter(q => q.status === 'published');
                 for (const question of activeQuestions) {
-                    await handleCloseQuestion(question.id);
+                    const publicationId = question.publication_id || question.id;
+                    if (publicationId) {
+                        await handleCloseQuestion(publicationId);
+                    }
                 }
                 enqueueSnackbar('تم إغلاق جميع الأسئلة بنجاح', { variant: 'success' });
             } catch (error) {
@@ -553,12 +655,12 @@ const LectureLive = () => {
             const publicationData = {
                 question_id: questionId,
                 lecture_id: parseInt(lectureId),
-                expires_at: expiresAt.toISOString().slice(0, 19).replace('T', ' '),
+                expires_at: expiresAt.toISOString(),
             };
 
             await callApi(() => questionService.publish(publicationData), 'تم إعادة نشر السؤال بنجاح');
         } catch (error) {
-            // تم التعامل مع الخطأ بواسطة useApi
+            // Error is handled by useApi
         }
     };
 
@@ -843,7 +945,7 @@ const LectureLive = () => {
                                                                                             pq.question_id === question.id && pq.status === 'published'
                                                                                         );
                                                                                         if (publication) {
-                                                                                            handleCloseQuestion(publication.id);
+                                                                                            handleCloseQuestion(publication.publication_id || publication.id);
                                                                                         }
                                                                                     }}
                                                                                     className="mb-2"
@@ -996,9 +1098,10 @@ const LectureLive = () => {
                                                     const question = publication.question;
                                                     const timeLeft = calculateTimeLeft(publication.expires_at);
                                                     const isActive = publication.status === 'published' && !timeLeft.isExpired;
+                                                    const publicationKey = publication.publication_id || publication.id;
 
                                                     return (
-                                                        <Card key={publication.id} className={`mb-3 border-left-${isActive ? 'warning' : 'secondary'} border-left-3`}>
+                                                        <Card key={publicationKey} className={`mb-3 border-left-${isActive ? 'warning' : 'secondary'} border-left-3`}>
                                                             <CardBody>
                                                                 <div className="d-flex justify-content-between align-items-start mb-3">
                                                                     <div style={{ flex: 1 }}>
@@ -1081,7 +1184,7 @@ const LectureLive = () => {
                                                                             <Button
                                                                                 color="danger"
                                                                                 size="sm"
-                                                                                onClick={() => handleCloseQuestion(publication.id)}
+                                                                                onClick={() => handleCloseQuestion(publication.publication_id || publication.id)}
                                                                                 className="mb-2"
                                                                                 block
                                                                             >

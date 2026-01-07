@@ -10,10 +10,7 @@ export const questionService = {
 
     closeQuestion: (publicationId) => api.post(`/teacher/publications/${publicationId}/close`),
 
-    // Student APIs
+
     submitAnswer: (answerData) => api.post('/student/answers', answerData),
 
-    getLectureQuestions(lectureId) {
-        return api.get(`/teacher/lectures/${lectureId}/questions`);
-    }
 };
