@@ -57,27 +57,33 @@ const LectureLive = () => {
     });
     const [loading, setLoading] = useState(true);
     const [questionsLoading, setQuestionsLoading] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState('disconnected');
     const { enqueueSnackbar } = useSnackbar();
     const { callApi } = useApi();
     const { user } = useAuth();
 
-    // Real-time handlers
+    // ==================== Real-time Handlers ====================
     const handleAttendanceUpdated = useCallback((data) => {
-        console.log('Attendance updated:', data);
+        console.log('✅ Attendance updated:', data);
+
         setAttendance(prev => {
-            const existing = prev.find(a => a.student?.id === data.student.id);
-            if (existing) {
-                return prev.map(a =>
-                    a.student?.id === data.student.id
-                        ? { ...a, last_seen_at: data.last_seen_at, status: 'present' }
-                        : a
-                );
+            const existingIndex = prev.findIndex(a => a.student?.id === data.student.id);
+
+            if (existingIndex !== -1) {
+                const updated = [...prev];
+                updated[existingIndex] = {
+                    ...updated[existingIndex],
+                    last_seen_at: data.last_seen_at || new Date().toISOString(),
+                    status: 'present',
+                    student: data.student || updated[existingIndex].student
+                };
+                return updated;
             } else {
                 return [...prev, {
                     id: data.student.id,
                     student: data.student,
-                    joined_at: data.joined_at,
-                    last_seen_at: data.last_seen_at,
+                    joined_at: data.joined_at || new Date().toISOString(),
+                    last_seen_at: data.last_seen_at || new Date().toISOString(),
                     status: 'present'
                 }];
             }
@@ -85,15 +91,32 @@ const LectureLive = () => {
     }, []);
 
     const handleAnswerSubmitted = useCallback((data) => {
-        enqueueSnackbar(`New answer submitted by ${data.student?.full_name || 'student'}`, { variant: 'info' });
+        console.log('✅ Answer submitted:', data);
 
-        // Update answers count in published questions
+        enqueueSnackbar(`إجابة جديدة من ${data.student?.full_name || 'طالب'}`, {
+            variant: 'info',
+            autoHideDuration: 3000,
+            anchorOrigin: { vertical: 'top', horizontal: 'left' }
+        });
+
+        // تحديث الأسئلة المنشورة بإضافة الإجابة
         if (data.publication_id) {
             setPublishedQuestions(prev => prev.map(pub => {
                 if (pub.id === data.publication_id) {
+                    const existingAnswer = pub.answers?.find(a =>
+                        a.student_id === data.student_id && a.publication_id === data.publication_id
+                    );
+
+                    if (existingAnswer) {
+                        return pub;
+                    }
+
                     return {
                         ...pub,
-                        answers: [...(pub.answers || []), data]
+                        answers: [...(pub.answers || []), {
+                            ...data,
+                            submitted_at: data.submitted_at || new Date().toISOString()
+                        }]
                     };
                 }
                 return pub;
@@ -102,79 +125,211 @@ const LectureLive = () => {
     }, [enqueueSnackbar]);
 
     const handleChatMessageSent = useCallback((data) => {
-        console.log('New chat message:', data);
-        setChatMessages(prev => [...prev, data.message || data]);
+        console.log('✅ Chat message:', data);
+
+        setChatMessages(prev => {
+            // تجنب تكرار الرسائل
+            const exists = prev.find(m =>
+                m.id === data.message?.id ||
+                (m.user?.id === data.message?.user?.id && m.sent_at === data.message?.sent_at)
+            );
+
+            if (exists) return prev;
+
+            return [...prev, {
+                ...(data.message || data),
+                user: data.user || { full_name: 'Unknown', role: 'student' },
+                sent_at: data.sent_at || new Date().toISOString(),
+                id: data.message?.id || `msg-${Date.now()}`
+            }];
+        });
     }, []);
 
     const handleQuestionPublished = useCallback((data) => {
-        console.log('Question published:', data);
-        setPublishedQuestions(prev => [...prev, data]);
-        enqueueSnackbar('New question published to students', { variant: 'success' });
+        console.log('✅ Question published:', data);
+
+        const newPublication = {
+            ...data,
+            id: data.id || `pub-${Date.now()}`,
+            status: 'published',
+            published_at: data.published_at || new Date().toISOString(),
+            expires_at: data.expires_at || new Date(Date.now() + 5 * 60000).toISOString(),
+            question: data.question || {
+                id: data.question_id,
+                question_text: data.question_text || 'Question text not available',
+                type: data.type || 'mcq',
+                points: data.points || 1,
+                options: data.options || []
+            },
+            answers: data.answers || []
+        };
+
+        setPublishedQuestions(prev => {
+            // تجنب التكرار
+            const exists = prev.find(p =>
+                p.id === newPublication.id ||
+                (p.question_id === newPublication.question_id && p.status === 'published')
+            );
+
+            if (exists) {
+                return prev.map(p =>
+                    p.id === newPublication.id ? newPublication : p
+                );
+            }
+
+            return [newPublication, ...prev];
+        });
+
+        enqueueSnackbar('تم نشر سؤال جديد للطلاب', {
+            variant: 'success',
+            autoHideDuration: 3000,
+            anchorOrigin: { vertical: 'top', horizontal: 'left' }
+        });
     }, [enqueueSnackbar]);
 
     const handleQuestionClosed = useCallback((data) => {
-        console.log('Question closed:', data);
-        setPublishedQuestions(prev => prev.map(pub =>
-            pub.id === data.id ? { ...pub, status: 'closed' } : pub
-        ));
-        enqueueSnackbar('Question closed for students', { variant: 'info' });
+        console.log('✅ Question closed:', data);
+
+        setPublishedQuestions(prev => prev.map(pub => {
+            if (pub.id === data.id || pub.question_id === data.question_id) {
+                return {
+                    ...pub,
+                    status: 'closed',
+                    closed_at: data.closed_at || new Date().toISOString()
+                };
+            }
+            return pub;
+        }));
+
+        enqueueSnackbar('تم إغلاق السؤال', {
+            variant: 'info',
+            autoHideDuration: 3000,
+            anchorOrigin: { vertical: 'top', horizontal: 'left' }
+        });
     }, [enqueueSnackbar]);
 
-    // ✅ استخدم useTeacherLectureRealtime بشكل صحيح
+    const handleStudentJoined = useCallback((data) => {
+        console.log('🎓 Student joined:', data);
+
+        setAttendance(prev => {
+            const existing = prev.find(a => a.student?.id === data.student.id);
+            if (!existing) {
+                return [...prev, {
+                    id: data.student.id,
+                    student: data.student,
+                    joined_at: data.joined_at || new Date().toISOString(),
+                    last_seen_at: new Date().toISOString(),
+                    status: 'present'
+                }];
+            }
+            return prev;
+        });
+
+        enqueueSnackbar(`انضم ${data.student?.full_name || 'طالب'} إلى المحاضرة`, {
+            variant: 'success',
+            autoHideDuration: 2000,
+            anchorOrigin: { vertical: 'top', horizontal: 'left' }
+        });
+    }, [enqueueSnackbar]);
+
+    const handleStudentLeft = useCallback((data) => {
+        console.log('🚪 Student left:', data);
+
+        setAttendance(prev => prev.map(record => {
+            if (record.student?.id === data.student.id) {
+                return {
+                    ...record,
+                    status: 'left',
+                    left_at: new Date().toISOString()
+                };
+            }
+            return record;
+        }));
+
+        enqueueSnackbar(`غادر ${data.student?.full_name || 'طالب'} المحاضرة`, {
+            variant: 'warning',
+            autoHideDuration: 2000,
+            anchorOrigin: { vertical: 'top', horizontal: 'left' }
+        });
+    }, [enqueueSnackbar]);
+
+    const handleLectureEnded = useCallback((data) => {
+        console.log('🏁 Lecture ended:', data);
+
+        enqueueSnackbar('تم إنهاء المحاضرة', {
+            variant: 'warning',
+            autoHideDuration: 5000,
+            anchorOrigin: { vertical: 'top', horizontal: 'center' }
+        });
+
+        localStorage.removeItem(`published_questions_${lectureId}`);
+
+        setTimeout(() => {
+            navigate('/teacher/dashboard');
+        }, 3000);
+    }, [enqueueSnackbar, lectureId, navigate]);
+
+    // ==================== Real-time Hook ====================
     useTeacherLectureRealtime(lectureId, user?.id, {
         onAttendanceUpdated: handleAttendanceUpdated,
         onAnswerSubmitted: handleAnswerSubmitted,
         onChatMessageSent: handleChatMessageSent,
         onQuestionPublished: handleQuestionPublished,
         onQuestionClosed: handleQuestionClosed,
+        onStudentJoined: handleStudentJoined,
+        onStudentLeft: handleStudentLeft,
+        onLectureEnded: handleLectureEnded,
+        onRealtimeConnected: () => setConnectionStatus('connected'),
+        onRealtimeError: () => setConnectionStatus('error')
     });
 
-    // ✅ تعريف الدوال المساعدة
+    // ==================== API Functions ====================
     const fetchAttendance = useCallback(async () => {
         try {
             const response = await callApi(() => lectureService.getLiveAttendance(lectureId));
             setAttendance(response.data || []);
         } catch (error) {
-            console.error('Error fetching attendance:', error);
+            console.error('❌ Error fetching attendance:', error);
             setAttendance([]);
         }
     }, [callApi, lectureId]);
 
-    // ✅ تم التصحيح هنا: استخدام questionService.getByLecture بدلاً من lectureService.getLectureQuestions
     const fetchQuestions = useCallback(async () => {
         try {
             setQuestionsLoading(true);
-            console.log('Fetching questions for lecture:', lectureId);
             const response = await callApi(() => questionService.getByLecture(lectureId));
-            console.log('Questions response:', response);
+
             if (response.data) {
                 setQuestions(response.data);
             } else {
                 setQuestions([]);
             }
         } catch (error) {
-            console.error('Error fetching questions:', error);
+            console.error('❌ Error fetching questions:', error);
             setQuestions([]);
         } finally {
             setQuestionsLoading(false);
         }
     }, [callApi, lectureId]);
 
-    // دالة جديدة لسحب الأسئلة المنشورة - سنستخدم الـ Pusher events بدلاً من API مباشر
     const fetchPublishedQuestions = useCallback(async () => {
         try {
-            // إذا كان لديك endpoint للأسئلة المنشورة، استخدمه هنا:
-            // const response = await callApi(() => lectureService.getPublishedQuestions(lectureId));
-            // setPublishedQuestions(response.data || []);
-
-            // حالياً، سنعتمد على Pusher events فقط
-            // يمكنك إضافة منطق لحفظ الأسئلة المنشورة في localStorage للاستمرارية
+            const response = await callApi(() => lectureService.getPublishedQuestions(lectureId));
+            if (response.data) {
+                setPublishedQuestions(response.data);
+                localStorage.setItem(`published_questions_${lectureId}`, JSON.stringify(response.data));
+            } else {
+                const savedQuestions = localStorage.getItem(`published_questions_${lectureId}`);
+                if (savedQuestions) {
+                    setPublishedQuestions(JSON.parse(savedQuestions));
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error fetching published questions:', error);
             const savedQuestions = localStorage.getItem(`published_questions_${lectureId}`);
             if (savedQuestions) {
                 setPublishedQuestions(JSON.parse(savedQuestions));
             }
-        } catch (error) {
-            console.error('Error fetching published questions:', error);
         }
     }, [callApi, lectureId]);
 
@@ -183,7 +338,7 @@ const LectureLive = () => {
             const response = await callApi(() => chatService.getTeacherChat(lectureId));
             setChatMessages(response.data || []);
         } catch (error) {
-            console.error('Error fetching chat:', error);
+            console.error('❌ Error fetching chat:', error);
             setChatMessages([]);
         }
     }, [callApi, lectureId]);
@@ -193,42 +348,45 @@ const LectureLive = () => {
             const response = await callApi(() => lectureService.getInteractionReport(lectureId));
             setInteractionReport(response.data);
         } catch (error) {
-            console.error('Error fetching interaction report:', error);
+            console.error('❌ Error fetching interaction report:', error);
             setInteractionReport(null);
         }
     }, [callApi, lectureId]);
 
     const handleEndLecture = useCallback(async () => {
-        if (window.confirm('Are you sure you want to end this lecture? All students will be disconnected.')) {
+        if (window.confirm('هل أنت متأكد من إنهاء المحاضرة؟ سيتم فصل جميع الطلاب.')) {
             try {
-                await callApi(() => lectureService.endLecture(lectureId), 'Lecture ended successfully');
-                // مسح الأسئلة المنشورة المحفوظة محلياً
+                await callApi(() => lectureService.endLecture(lectureId), 'تم إنهاء المحاضرة بنجاح');
                 localStorage.removeItem(`published_questions_${lectureId}`);
-                navigate('/teacher/dashboard');
+
+                setTimeout(() => {
+                    navigate('/teacher/dashboard');
+                }, 1000);
             } catch (error) {
-                // Error is handled by useApi
+                // تم التعامل مع الخطأ بواسطة useApi
             }
         }
     }, [callApi, lectureId, navigate]);
 
+    // ==================== Initial Data Fetch ====================
     const fetchLectureData = useCallback(async () => {
         try {
             setLoading(true);
+            console.log('🚀 Fetching lecture data for ID:', lectureId);
 
             if (!lectureId || isNaN(lectureId)) {
-                enqueueSnackbar('Invalid lecture ID', { variant: 'error' });
+                enqueueSnackbar('معرّف المحاضرة غير صالح', { variant: 'error' });
                 navigate('/teacher/dashboard');
                 return;
             }
 
-            // If lecture is not in state, fetch it from today's lectures
             if (!lecture) {
                 const lecturesResponse = await callApi(() => lectureService.getTeacherTodayLectures());
                 const lectures = lecturesResponse.data || [];
                 const foundLecture = lectures.find(l => l.id === parseInt(lectureId));
 
                 if (!foundLecture) {
-                    enqueueSnackbar('Lecture not found or not available today', { variant: 'error' });
+                    enqueueSnackbar('المحاضرة غير موجودة أو غير متاحة اليوم', { variant: 'error' });
                     navigate('/teacher/dashboard');
                     return;
                 }
@@ -236,72 +394,77 @@ const LectureLive = () => {
                 setLecture(foundLecture);
             }
 
-            // Check if lecture is running
             if (lecture?.status !== 'running') {
-                enqueueSnackbar('This lecture is not currently active', { variant: 'warning' });
+                enqueueSnackbar('هذه المحاضرة غير نشطة حالياً', { variant: 'warning' });
                 navigate('/teacher/dashboard');
                 return;
             }
 
-            // Fetch initial data
             await Promise.all([
                 fetchAttendance(),
-                fetchQuestions(), // ✅ تم التصحيح هنا
+                fetchQuestions(),
+                fetchPublishedQuestions(),
                 fetchChat(),
                 fetchInteractionReport()
             ]);
 
+            console.log('✅ All initial data fetched successfully');
+
         } catch (error) {
-            enqueueSnackbar('Failed to load lecture data', { variant: 'error' });
+            console.error('❌ Failed to load lecture data:', error);
+            enqueueSnackbar('فشل تحميل بيانات المحاضرة', { variant: 'error' });
             navigate('/teacher/dashboard');
         } finally {
             setLoading(false);
         }
-    }, [lecture, lectureId, callApi, enqueueSnackbar, navigate, fetchAttendance, fetchQuestions, fetchChat, fetchInteractionReport]);
+    }, [lecture, lectureId, callApi, enqueueSnackbar, navigate, fetchAttendance, fetchQuestions, fetchPublishedQuestions, fetchChat, fetchInteractionReport]);
 
     useEffect(() => {
         fetchLectureData();
     }, [fetchLectureData]);
 
-    // حفظ الأسئلة المنشورة في localStorage عند التحديث
+    // ==================== Auto-save & Auto-close ====================
     useEffect(() => {
         if (publishedQuestions.length > 0) {
             localStorage.setItem(`published_questions_${lectureId}`, JSON.stringify(publishedQuestions));
         }
     }, [publishedQuestions, lectureId]);
 
-    // Auto-close expired questions
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date();
-            publishedQuestions.forEach(publication => {
-                const expiresAt = new Date(publication.expires_at);
-                if (expiresAt <= now && publication.status === 'published') {
-                    handleCloseQuestion(publication.id);
+            const updatedQuestions = publishedQuestions.map(publication => {
+                if (publication.status === 'published') {
+                    const expiresAt = new Date(publication.expires_at);
+                    if (expiresAt <= now) {
+                        return { ...publication, status: 'expired' };
+                    }
                 }
+                return publication;
             });
-        }, 30000); // Check every 30 seconds
+
+            setPublishedQuestions(updatedQuestions);
+        }, 30000);
 
         return () => clearInterval(interval);
     }, [publishedQuestions]);
 
+    // ==================== Event Handlers ====================
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
 
         try {
-            await callApi(() => chatService.sendTeacherMessage(lectureId, newMessage), 'Message sent');
+            await callApi(() => chatService.sendTeacherMessage(lectureId, newMessage), 'تم إرسال الرسالة');
             setNewMessage('');
-            fetchChat(); // Refresh chat
         } catch (error) {
-            // Error is handled by useApi
+            // تم التعامل مع الخطأ بواسطة useApi
         }
     };
 
     const handleCreateQuestion = async (e) => {
         e.preventDefault();
         try {
-            // Format the question data based on API requirements
             const questionData = {
                 lecture_id: parseInt(lectureId),
                 type: questionForm.type,
@@ -309,20 +472,19 @@ const LectureLive = () => {
                 points: questionForm.points,
             };
 
-            // Add options only for MCQ and True/False
             if (questionForm.type === 'mcq' || questionForm.type === 'true_false') {
                 questionData.options = questionForm.options.map(option => ({
-                    text: option.text
+                    text: option.text,
+                    is_correct: option.is_correct || false
                 }));
                 questionData.correct_index = questionForm.correct_index;
             }
 
-            const response = await callApi(() => questionService.create(questionData), 'Question created successfully');
+            const response = await callApi(() => questionService.create(questionData), 'تم إنشاء السؤال بنجاح');
 
-            // Add the new question to the list immediately
             if (response.data) {
                 setQuestions(prev => [response.data, ...prev]);
-                enqueueSnackbar('Question created successfully!', { variant: 'success' });
+                enqueueSnackbar('تم إنشاء السؤال بنجاح!', { variant: 'success' });
             }
 
             setQuestionModal(false);
@@ -334,20 +496,19 @@ const LectureLive = () => {
                 correct_index: 0
             });
 
-            // Optionally refresh the questions list to ensure consistency
             setTimeout(() => {
                 fetchQuestions();
             }, 1000);
 
         } catch (error) {
-            // Error is handled by useApi
+            // تم التعامل مع الخطأ بواسطة useApi
         }
     };
 
     const handlePublishQuestion = async (questionId) => {
         try {
             const expiresAt = new Date();
-            expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutes from now
+            expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
             const publicationData = {
                 question_id: questionId,
@@ -355,40 +516,31 @@ const LectureLive = () => {
                 expires_at: expiresAt.toISOString().slice(0, 19).replace('T', ' '),
             };
 
-            // Call the API to publish the question
-            const response = await callApi(() => questionService.publish(publicationData), 'Question published successfully');
-
-            // The real publication ID will come from the response
-            if (response.data && response.data.id) {
-                // The question will be added to publishedQuestions via Pusher event
-                // We don't need to manually add it here
-            }
+            await callApi(() => questionService.publish(publicationData), 'تم نشر السؤال للطلاب');
 
         } catch (error) {
-            // Error is handled by useApi
+            // تم التعامل مع الخطأ بواسطة useApi
         }
     };
 
     const handleCloseQuestion = async (publicationId) => {
         try {
-            console.log('Closing publication with ID:', publicationId);
-            await callApi(() => questionService.closeQuestion(publicationId), 'Question closed');
-            // The question will be updated via Pusher event
+            await callApi(() => questionService.closeQuestion(publicationId), 'تم إغلاق السؤال');
         } catch (error) {
-            // Error is handled by useApi
+            // تم التعامل مع الخطأ بواسطة useApi
         }
     };
 
     const handleCloseAllQuestions = async () => {
-        if (window.confirm('Are you sure you want to close all active questions?')) {
+        if (window.confirm('هل أنت متأكد من إغلاق جميع الأسئلة النشطة؟')) {
             try {
                 const activeQuestions = publishedQuestions.filter(q => q.status === 'published');
                 for (const question of activeQuestions) {
                     await handleCloseQuestion(question.id);
                 }
-                enqueueSnackbar('All questions closed successfully', { variant: 'success' });
+                enqueueSnackbar('تم إغلاق جميع الأسئلة بنجاح', { variant: 'success' });
             } catch (error) {
-                enqueueSnackbar('Error closing questions', { variant: 'error' });
+                enqueueSnackbar('خطأ في إغلاق الأسئلة', { variant: 'error' });
             }
         }
     };
@@ -396,7 +548,7 @@ const LectureLive = () => {
     const handleRepublishQuestion = async (questionId) => {
         try {
             const expiresAt = new Date();
-            expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutes from now
+            expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
             const publicationData = {
                 question_id: questionId,
@@ -404,9 +556,9 @@ const LectureLive = () => {
                 expires_at: expiresAt.toISOString().slice(0, 19).replace('T', ' '),
             };
 
-            await callApi(() => questionService.publish(publicationData), 'Question republished successfully');
+            await callApi(() => questionService.publish(publicationData), 'تم إعادة نشر السؤال بنجاح');
         } catch (error) {
-            // Error is handled by useApi
+            // تم التعامل مع الخطأ بواسطة useApi
         }
     };
 
@@ -425,41 +577,64 @@ const LectureLive = () => {
         };
     };
 
-    // ✅ الآن تم تعريف جميع الدوال
+    const getConnectionStatusColor = () => {
+        switch(connectionStatus) {
+            case 'connected': return 'success';
+            case 'connecting': return 'warning';
+            case 'disconnected': return 'danger';
+            default: return 'secondary';
+        }
+    };
 
+    const getConnectionStatusText = () => {
+        switch(connectionStatus) {
+            case 'connected': return 'متصل';
+            case 'connecting': return 'جاري الاتصال...';
+            case 'disconnected': return 'غير متصل';
+            default: return 'غير معروف';
+        }
+    };
+
+    // ==================== Render ====================
     return (
         <div className="container-fluid">
             {loading ? (
                 <div className="text-center py-5">
                     <Spinner color="primary" />
-                    <p>Loading lecture data...</p>
+                    <p className="mt-2">جاري تحميل بيانات المحاضرة...</p>
                 </div>
             ) : lecture ? (
                 <>
                     {/* Lecture Header */}
                     <Row className="mb-4 align-items-center">
-                        <Col md="8">
+                        <Col md="6">
                             <h2 className="mb-1">
                                 {lecture.course?.code} - {lecture.course?.name}
                                 {lecture.status === 'running' && (
-                                    <Badge color="success" className="ml-2">
+                                    <Badge color="success" className="mr-2" pill>
                                         <i className="ni ni-user-run mr-1"></i>
-                                        LIVE
+                                        مباشر
                                     </Badge>
                                 )}
                             </h2>
                             <p className="text-muted mb-0">
-                                Section: {lecture.section?.name} | Lecture #{lecture.lecture_no}
+                                الشعبة: {lecture.section?.name} | المحاضرة #{lecture.lecture_no}
                             </p>
+                            <div className="mt-2">
+                                <Badge color={getConnectionStatusColor()} className="mr-2" pill>
+                                    <i className={`ni ni-${connectionStatus === 'connected' ? 'spaceship' : 'watch-time'} mr-1`}></i>
+                                    {getConnectionStatusText()}
+                                </Badge>
+                            </div>
                         </Col>
-                        <Col md="4" className="text-right">
+                        <Col md="6" className="text-left">
                             <Button color="info" className="mr-2" onClick={() => setReportModal(true)}>
                                 <i className="ni ni-chart-bar-32 mr-1"></i>
-                                View Report
+                                عرض التقرير
                             </Button>
                             <Button color="danger" onClick={handleEndLecture}>
                                 <i className="ni ni-button-power mr-1"></i>
-                                End Lecture
+                                إنهاء المحاضرة
                             </Button>
                         </Col>
                     </Row>
@@ -472,7 +647,7 @@ const LectureLive = () => {
                                 onClick={() => setActiveTab('1')}
                             >
                                 <i className="ni ni-single-02 mr-1"></i>
-                                Attendance ({attendance.length})
+                                الحضور ({attendance.length})
                             </NavLink>
                         </NavItem>
                         <NavItem>
@@ -481,8 +656,8 @@ const LectureLive = () => {
                                 onClick={() => setActiveTab('2')}
                             >
                                 <i className="ni ni-collection mr-1"></i>
-                                Questions ({questions.length})
-                                {questionsLoading && <Spinner size="sm" color="primary" className="ml-2" />}
+                                الأسئلة ({questions.length})
+                                {questionsLoading && <Spinner size="sm" color="primary" className="mr-2" />}
                             </NavLink>
                         </NavItem>
                         <NavItem>
@@ -491,7 +666,7 @@ const LectureLive = () => {
                                 onClick={() => setActiveTab('3')}
                             >
                                 <i className="ni ni-chat-round mr-1"></i>
-                                Chat ({chatMessages.length})
+                                المحادثة ({chatMessages.length})
                             </NavLink>
                         </NavItem>
                         <NavItem>
@@ -500,7 +675,7 @@ const LectureLive = () => {
                                 onClick={() => setActiveTab('4')}
                             >
                                 <i className="ni ni-send mr-1"></i>
-                                Published Questions ({publishedQuestions.filter(p => p.status === 'published').length})
+                                الأسئلة المنشورة ({publishedQuestions.filter(p => p.status === 'published').length})
                             </NavLink>
                         </NavItem>
                     </Nav>
@@ -514,16 +689,16 @@ const LectureLive = () => {
                                         <CardBody>
                                             <CardTitle tag="h5">
                                                 <i className="ni ni-single-02 mr-2"></i>
-                                                Live Attendance
+                                                الحضور المباشر
                                             </CardTitle>
                                             <Table responsive hover>
                                                 <thead>
                                                 <tr>
-                                                    <th>Student ID</th>
-                                                    <th>Student Name</th>
-                                                    <th>Email</th>
-                                                    <th>Status</th>
-                                                    <th>Last Seen</th>
+                                                    <th>الرقم الجامعي</th>
+                                                    <th>اسم الطالب</th>
+                                                    <th>البريد الإلكتروني</th>
+                                                    <th>الحالة</th>
+                                                    <th>آخر ظهور</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
@@ -532,18 +707,18 @@ const LectureLive = () => {
                                                         <tr key={record.id || record.student?.id}>
                                                             <td>{record.student?.id || 'N/A'}</td>
                                                             <td>
-                                                                <strong>{record.student?.full_name || 'Unknown Student'}</strong>
+                                                                <strong>{record.student?.full_name || 'طالب غير معروف'}</strong>
                                                             </td>
                                                             <td>{record.student?.email || 'N/A'}</td>
                                                             <td>
                                                                 <Badge color="success">
                                                                     <i className="ni ni-check-bold mr-1"></i>
-                                                                    Present
+                                                                    حاضر
                                                                 </Badge>
                                                             </td>
                                                             <td>
                                                                 {record.last_seen_at ?
-                                                                    new Date(record.last_seen_at).toLocaleTimeString() :
+                                                                    new Date(record.last_seen_at).toLocaleTimeString('ar-SA') :
                                                                     'N/A'}
                                                             </td>
                                                         </tr>
@@ -552,7 +727,7 @@ const LectureLive = () => {
                                                     <tr>
                                                         <td colSpan="5" className="text-center py-4">
                                                             <i className="ni ni-single-02 text-muted" style={{ fontSize: '3rem' }}></i>
-                                                            <p className="mt-3 text-muted">No students have joined yet</p>
+                                                            <p className="mt-3 text-muted">لم ينضم أي طالب بعد</p>
                                                         </td>
                                                     </tr>
                                                 )}
@@ -560,7 +735,7 @@ const LectureLive = () => {
                                             </Table>
                                             <Button color="primary" size="sm" onClick={fetchAttendance}>
                                                 <i className="ni ni-refresh mr-1"></i>
-                                                Refresh Attendance
+                                                تحديث الحضور
                                             </Button>
                                         </CardBody>
                                     </Card>
@@ -577,16 +752,16 @@ const LectureLive = () => {
                                             <div className="d-flex justify-content-between align-items-center mb-4">
                                                 <CardTitle tag="h5" className="mb-0">
                                                     <i className="ni ni-collection mr-2"></i>
-                                                    Question Bank ({questions.length})
-                                                    {questionsLoading && <Spinner size="sm" color="primary" className="ml-2" />}
+                                                    بنك الأسئلة ({questions.length})
+                                                    {questionsLoading && <Spinner size="sm" color="primary" className="mr-2" />}
                                                 </CardTitle>
                                                 <div>
                                                     <Button color="info" size="sm" className="mr-2" onClick={fetchQuestions}>
                                                         <i className="ni ni-refresh mr-1"></i>
-                                                        Refresh
+                                                        تحديث
                                                     </Button>
                                                     <Button color="primary" onClick={() => setQuestionModal(true)}>
-                                                        <i className="ni ni-fat-add mr-1"></i> Create Question
+                                                        <i className="ni ni-fat-add mr-1"></i> إنشاء سؤال
                                                     </Button>
                                                 </div>
                                             </div>
@@ -594,7 +769,7 @@ const LectureLive = () => {
                                             {questionsLoading ? (
                                                 <div className="text-center py-4">
                                                     <Spinner color="primary" />
-                                                    <p className="mt-2">Loading questions...</p>
+                                                    <p className="mt-2">جاري تحميل الأسئلة...</p>
                                                 </div>
                                             ) : questions.length > 0 ? (
                                                 <div className="question-list">
@@ -614,30 +789,32 @@ const LectureLive = () => {
                                                                             <h6>{question.question_text}</h6>
                                                                             <div className="d-flex align-items-center flex-wrap gap-2 mt-2">
                                                                                 <Badge color="info">
-                                                                                    {question.type?.toUpperCase()}
+                                                                                    {question.type === 'mcq' ? 'اختيار متعدد' :
+                                                                                        question.type === 'true_false' ? 'صح/خطأ' :
+                                                                                            'إجابة قصيرة'}
                                                                                 </Badge>
                                                                                 <Badge color="success">
-                                                                                    {question.points || 0} points
+                                                                                    {question.points || 0} نقطة
                                                                                 </Badge>
                                                                                 <Badge color="secondary">
-                                                                                    Created: {new Date(question.created_at).toLocaleDateString()}
+                                                                                    أنشئت: {new Date(question.created_at).toLocaleDateString('ar-SA')}
                                                                                 </Badge>
                                                                                 {isPublished && (
                                                                                     <Badge color="warning">
                                                                                         <i className="ni ni-send mr-1"></i>
-                                                                                        Currently Published
+                                                                                        منشور حالياً
                                                                                     </Badge>
                                                                                 )}
                                                                             </div>
                                                                             {question.options && question.options.length > 0 && (
                                                                                 <div className="mt-3">
-                                                                                    <h6>Options:</h6>
+                                                                                    <h6>الخيارات:</h6>
                                                                                     <ul className="list-unstyled mb-0">
                                                                                         {question.options.map((option, idx) => (
                                                                                             <li key={option.id || idx} className={`mb-1 ${option.is_correct ? 'text-success font-weight-bold' : ''}`}>
                                                                                                 <i className={`ni ni-${option.is_correct ? 'check-bold' : 'simple-remove'} mr-2`}></i>
                                                                                                 {option.option_text}
-                                                                                                {option.is_correct && ' (Correct)'}
+                                                                                                {option.is_correct && ' (صحيح)'}
                                                                                             </li>
                                                                                         ))}
                                                                                     </ul>
@@ -653,8 +830,8 @@ const LectureLive = () => {
                                                                                 disabled={isPublished}
                                                                             >
                                                                                 <i className="ni ni-send mr-1"></i>
-                                                                                {isPublished ? 'Currently Published' :
-                                                                                    wasPublished ? 'Republish' : 'Publish'}
+                                                                                {isPublished ? 'منشور حالياً' :
+                                                                                    wasPublished ? 'إعادة نشر' : 'نشر'}
                                                                             </Button>
 
                                                                             {isPublished && (
@@ -672,7 +849,7 @@ const LectureLive = () => {
                                                                                     className="mb-2"
                                                                                 >
                                                                                     <i className="ni ni-fat-remove mr-1"></i>
-                                                                                    Close
+                                                                                    إغلاق
                                                                                 </Button>
                                                                             )}
                                                                         </div>
@@ -685,7 +862,7 @@ const LectureLive = () => {
                                             ) : (
                                                 <Alert color="info">
                                                     <i className="ni ni-bulb-61 mr-2"></i>
-                                                    No questions created yet. Create questions to engage with your students during the lecture.
+                                                    لا توجد أسئلة بعد. أنشئ أسئلة للتفاعل مع طلابك خلال المحاضرة.
                                                 </Alert>
                                             )}
                                         </CardBody>
@@ -704,11 +881,11 @@ const LectureLive = () => {
                                                 <div className="d-flex justify-content-between align-items-center">
                                                     <CardTitle tag="h6" className="mb-0">
                                                         <i className="ni ni-chat-round mr-2"></i>
-                                                        Lecture Chat
+                                                        محادثة المحاضرة
                                                     </CardTitle>
                                                     <Button color="link" size="sm" onClick={fetchChat}>
                                                         <i className="ni ni-refresh mr-1"></i>
-                                                        Refresh
+                                                        تحديث
                                                     </Button>
                                                 </div>
                                             </div>
@@ -720,7 +897,7 @@ const LectureLive = () => {
                                                                 <div className="d-flex justify-content-between align-items-center mb-1">
                                                                     <strong>{message.user?.full_name}</strong>
                                                                     <small className={message.user?.role === 'teacher' ? 'text-white-50' : 'text-muted'}>
-                                                                        {new Date(message.sent_at).toLocaleTimeString([], {
+                                                                        {new Date(message.sent_at).toLocaleTimeString('ar-SA', {
                                                                             hour: '2-digit',
                                                                             minute: '2-digit'
                                                                         })}
@@ -729,7 +906,7 @@ const LectureLive = () => {
                                                                 <p className="mb-0">{message.message}</p>
                                                                 {message.user?.role === 'student' && (
                                                                     <small className="d-block mt-1 text-muted">
-                                                                        Student
+                                                                        طالب
                                                                     </small>
                                                                 )}
                                                             </div>
@@ -738,7 +915,7 @@ const LectureLive = () => {
                                                 ) : (
                                                     <div className="text-center py-5">
                                                         <i className="ni ni-chat-round text-muted" style={{ fontSize: '3rem' }}></i>
-                                                        <p className="mt-3 text-muted">No messages yet. Start the conversation!</p>
+                                                        <p className="mt-3 text-muted">لا توجد رسائل بعد. ابدأ المحادثة!</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -750,7 +927,7 @@ const LectureLive = () => {
                                         <CardBody>
                                             <CardTitle tag="h6">
                                                 <i className="ni ni-send mr-2"></i>
-                                                Send Message
+                                                إرسال رسالة
                                             </CardTitle>
                                             <Form onSubmit={handleSendMessage}>
                                                 <FormGroup>
@@ -758,17 +935,23 @@ const LectureLive = () => {
                                                         type="textarea"
                                                         value={newMessage}
                                                         onChange={(e) => setNewMessage(e.target.value)}
-                                                        placeholder="Type your message here..."
+                                                        placeholder="اكتب رسالتك هنا..."
                                                         rows="4"
                                                         maxLength="500"
                                                     />
                                                     <small className="text-muted float-right">
-                                                        {newMessage.length}/500 characters
+                                                        {newMessage.length}/500 حرف
                                                     </small>
                                                 </FormGroup>
-                                                <Button type="submit" color="primary" block disabled={!newMessage.trim()}>
+                                                <Button
+                                                    type="submit"
+                                                    color="primary"
+                                                    block
+                                                    disabled={!newMessage.trim() || connectionStatus !== 'connected'}
+                                                >
                                                     <i className="ni ni-send mr-2"></i>
-                                                    Send Message
+                                                    إرسال الرسالة
+                                                    {connectionStatus !== 'connected' && ' (غير متصل)'}
                                                 </Button>
                                             </Form>
                                         </CardBody>
@@ -786,15 +969,15 @@ const LectureLive = () => {
                                             <div className="d-flex justify-content-between align-items-center mb-4">
                                                 <CardTitle tag="h5" className="mb-0">
                                                     <i className="ni ni-send mr-2"></i>
-                                                    Published Questions
-                                                    <Badge color="warning" className="ml-2">
-                                                        {publishedQuestions.filter(p => p.status === 'published').length} Active
+                                                    الأسئلة المنشورة
+                                                    <Badge color="warning" className="mr-2">
+                                                        {publishedQuestions.filter(p => p.status === 'published').length} نشط
                                                     </Badge>
                                                 </CardTitle>
                                                 <div>
                                                     <Button color="info" size="sm" className="mr-2" onClick={fetchPublishedQuestions}>
                                                         <i className="ni ni-refresh mr-1"></i>
-                                                        Refresh
+                                                        تحديث
                                                     </Button>
                                                     <Button
                                                         color="danger"
@@ -803,7 +986,7 @@ const LectureLive = () => {
                                                         disabled={publishedQuestions.filter(p => p.status === 'published').length === 0}
                                                     >
                                                         <i className="ni ni-fat-remove mr-1"></i>
-                                                        Close All
+                                                        إغلاق الكل
                                                     </Button>
                                                 </div>
                                             </div>
@@ -822,24 +1005,26 @@ const LectureLive = () => {
                                                                         <h5>{question?.question_text}</h5>
                                                                         <div className="d-flex align-items-center flex-wrap gap-2 mt-2">
                                                                             <Badge color="info">
-                                                                                {question?.type?.toUpperCase()}
+                                                                                {question?.type === 'mcq' ? 'اختيار متعدد' :
+                                                                                    question?.type === 'true_false' ? 'صح/خطأ' :
+                                                                                        'إجابة قصيرة'}
                                                                             </Badge>
                                                                             <Badge color="success">
-                                                                                {question?.points || 0} points
+                                                                                {question?.points || 0} نقطة
                                                                             </Badge>
                                                                             <Badge color={isActive ? "warning" : "secondary"}>
                                                                                 {publication.status === 'closed'
-                                                                                    ? 'Closed'
+                                                                                    ? 'مغلق'
                                                                                     : timeLeft.isExpired
-                                                                                        ? 'Expired'
-                                                                                        : `${timeLeft.minutes}:${String(timeLeft.seconds).padStart(2, '0')} remaining`
+                                                                                        ? 'منتهي'
+                                                                                        : `${timeLeft.minutes}:${String(timeLeft.seconds).padStart(2, '0')} متبقي`
                                                                                 }
                                                                             </Badge>
                                                                             <Badge color="light" className="text-dark">
-                                                                                Published: {new Date(publication.published_at).toLocaleTimeString()}
+                                                                                نشر: {new Date(publication.published_at).toLocaleTimeString('ar-SA')}
                                                                             </Badge>
                                                                             <Badge color="light" className="text-dark">
-                                                                                Expires: {new Date(publication.expires_at).toLocaleTimeString()}
+                                                                                ينتهي: {new Date(publication.expires_at).toLocaleTimeString('ar-SA')}
                                                                             </Badge>
                                                                         </div>
 
@@ -847,14 +1032,14 @@ const LectureLive = () => {
                                                                         <div className="mt-3">
                                                                             <Badge color="info">
                                                                                 <i className="ni ni-single-copy-04 mr-1"></i>
-                                                                                {publication.answers?.length || 0} answers received
+                                                                                {publication.answers?.length || 0} إجابة
                                                                             </Badge>
                                                                         </div>
 
                                                                         {/* Show question options */}
                                                                         {question?.options && question.options.length > 0 && (
                                                                             <div className="mt-3">
-                                                                                <h6>Options:</h6>
+                                                                                <h6>الخيارات:</h6>
                                                                                 <ul className="list-unstyled mb-0">
                                                                                     {question.options.map((option, idx) => (
                                                                                         <li
@@ -863,7 +1048,28 @@ const LectureLive = () => {
                                                                                         >
                                                                                             <i className={`ni ni-${option.is_correct ? 'check-bold' : 'simple-remove'} mr-2`}></i>
                                                                                             {option.option_text}
-                                                                                            {option.is_correct && ' (Correct)'}
+                                                                                            {option.is_correct && ' (صحيح)'}
+                                                                                        </li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Show recent answers */}
+                                                                        {publication.answers && publication.answers.length > 0 && (
+                                                                            <div className="mt-3">
+                                                                                <h6>آخر الإجابات:</h6>
+                                                                                <ul className="list-unstyled">
+                                                                                    {publication.answers.slice(0, 3).map((answer, idx) => (
+                                                                                        <li key={idx} className="mb-1">
+                                                                                            <i className="ni ni-single-02 mr-2 text-info"></i>
+                                                                                            {answer.student?.full_name || 'طالب'}:
+                                                                                            <span className={`ml-2 ${answer.is_correct ? 'text-success' : 'text-danger'}`}>
+                                                                                                {answer.answer_text || 'إجابة'}
+                                                                                            </span>
+                                                                                            <small className="text-muted mr-2">
+                                                                                                ({new Date(answer.submitted_at).toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'})})
+                                                                                            </small>
                                                                                         </li>
                                                                                     ))}
                                                                                 </ul>
@@ -880,11 +1086,11 @@ const LectureLive = () => {
                                                                                 block
                                                                             >
                                                                                 <i className="ni ni-fat-remove mr-1"></i>
-                                                                                Close Now
+                                                                                إغلاق الآن
                                                                             </Button>
                                                                         ) : (
                                                                             <Badge color="secondary" className="p-2 mb-2">
-                                                                                {publication.status === 'closed' ? 'Closed' : 'Expired'}
+                                                                                {publication.status === 'closed' ? 'مغلق' : 'منتهي'}
                                                                             </Badge>
                                                                         )}
 
@@ -898,7 +1104,7 @@ const LectureLive = () => {
                                                                                 block
                                                                             >
                                                                                 <i className="ni ni-refresh mr-1"></i>
-                                                                                Republish
+                                                                                إعادة نشر
                                                                             </Button>
                                                                         )}
                                                                     </div>
@@ -910,7 +1116,7 @@ const LectureLive = () => {
                                             ) : (
                                                 <Alert color="info">
                                                     <i className="ni ni-bulb-61 mr-2"></i>
-                                                    No published questions yet. Publish a question from the Questions tab.
+                                                    لا توجد أسئلة منشورة بعد. انشر سؤالاً من تبويب الأسئلة.
                                                 </Alert>
                                             )}
                                         </CardBody>
@@ -924,12 +1130,12 @@ const LectureLive = () => {
                     <Modal isOpen={questionModal} toggle={() => setQuestionModal(!questionModal)} size="lg">
                         <ModalHeader toggle={() => setQuestionModal(!questionModal)}>
                             <i className="ni ni-fat-add mr-2"></i>
-                            Create New Question
+                            إنشاء سؤال جديد
                         </ModalHeader>
                         <Form onSubmit={handleCreateQuestion}>
                             <ModalBody>
                                 <FormGroup>
-                                    <Label>Question Type</Label>
+                                    <Label>نوع السؤال</Label>
                                     <Input
                                         type="select"
                                         value={questionForm.type}
@@ -940,8 +1146,8 @@ const LectureLive = () => {
 
                                             if (newType === 'true_false') {
                                                 newOptions = [
-                                                    { text: 'True', is_correct: true },
-                                                    { text: 'False', is_correct: false }
+                                                    { text: 'صح', is_correct: true },
+                                                    { text: 'خطأ', is_correct: false }
                                                 ];
                                             } else if (newType === 'mcq') {
                                                 newOptions = [
@@ -961,26 +1167,26 @@ const LectureLive = () => {
                                             });
                                         }}
                                     >
-                                        <option value="mcq">Multiple Choice (MCQ)</option>
-                                        <option value="true_false">True/False</option>
-                                        <option value="short">Short Answer</option>
+                                        <option value="mcq">اختيار متعدد</option>
+                                        <option value="true_false">صح/خطأ</option>
+                                        <option value="short">إجابة قصيرة</option>
                                     </Input>
                                 </FormGroup>
 
                                 <FormGroup>
-                                    <Label>Question Text</Label>
+                                    <Label>نص السؤال</Label>
                                     <Input
                                         type="textarea"
                                         value={questionForm.question_text}
                                         onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })}
-                                        placeholder="Enter your question..."
+                                        placeholder="اكتب سؤالك هنا..."
                                         rows="3"
                                         required
                                     />
                                 </FormGroup>
 
                                 <FormGroup>
-                                    <Label>Points</Label>
+                                    <Label>النقاط</Label>
                                     <Input
                                         type="number"
                                         value={questionForm.points}
@@ -993,7 +1199,7 @@ const LectureLive = () => {
 
                                 {(questionForm.type === 'mcq' || questionForm.type === 'true_false') && (
                                     <>
-                                        <Label>Options</Label>
+                                        <Label>الخيارات</Label>
                                         {questionForm.options.map((option, index) => (
                                             <FormGroup key={index} className="d-flex align-items-center mb-2">
                                                 <Input
@@ -1004,12 +1210,12 @@ const LectureLive = () => {
                                                         newOptions[index].text = e.target.value;
                                                         setQuestionForm({ ...questionForm, options: newOptions });
                                                     }}
-                                                    placeholder={`Option ${index + 1}`}
-                                                    className="mr-2"
+                                                    placeholder={`الخيار ${index + 1}`}
+                                                    className="ml-2"
                                                     required
                                                     disabled={questionForm.type === 'true_false' && index < 2}
                                                 />
-                                                <FormGroup check className="mr-2">
+                                                <FormGroup check className="ml-2">
                                                     <Label check>
                                                         <Input
                                                             type="radio"
@@ -1017,7 +1223,7 @@ const LectureLive = () => {
                                                             checked={index === questionForm.correct_index}
                                                             onChange={() => setQuestionForm({ ...questionForm, correct_index: index })}
                                                         />{' '}
-                                                        Correct
+                                                        صحيح
                                                     </Label>
                                                 </FormGroup>
                                                 {questionForm.type === 'mcq' && questionForm.options.length > 2 && (
@@ -1051,7 +1257,7 @@ const LectureLive = () => {
                                                 }}
                                                 className="p-0"
                                             >
-                                                <i className="ni ni-fat-add mr-1"></i> Add Another Option
+                                                <i className="ni ni-fat-add mr-1"></i> إضافة خيار آخر
                                             </Button>
                                         )}
                                     </>
@@ -1060,11 +1266,11 @@ const LectureLive = () => {
                             <ModalFooter>
                                 <Button type="submit" color="primary">
                                     <i className="ni ni-check-bold mr-1"></i>
-                                    Create Question
+                                    إنشاء السؤال
                                 </Button>
                                 <Button color="secondary" onClick={() => setQuestionModal(false)}>
                                     <i className="ni ni-fat-remove mr-1"></i>
-                                    Cancel
+                                    إلغاء
                                 </Button>
                             </ModalFooter>
                         </Form>
@@ -1074,31 +1280,31 @@ const LectureLive = () => {
                     <Modal isOpen={reportModal} toggle={() => setReportModal(!reportModal)} size="lg">
                         <ModalHeader toggle={() => setReportModal(!reportModal)}>
                             <i className="ni ni-chart-bar-32 mr-2"></i>
-                            Interaction Report
+                            تقرير التفاعل
                         </ModalHeader>
                         <ModalBody>
                             {interactionReport ? (
                                 <div>
                                     <Card className="mb-4">
                                         <CardBody>
-                                            <CardTitle tag="h5">Summary</CardTitle>
+                                            <CardTitle tag="h5">ملخص</CardTitle>
                                             <Row>
                                                 <Col md="4">
                                                     <div className="text-center">
-                                                        <h2 className="text-primary">{interactionReport.summary.publications_count}</h2>
-                                                        <p className="text-muted mb-0">Questions Published</p>
+                                                        <h2 className="text-primary">{interactionReport.summary?.publications_count || 0}</h2>
+                                                        <p className="text-muted mb-0">أسئلة منشورة</p>
                                                     </div>
                                                 </Col>
                                                 <Col md="4">
                                                     <div className="text-center">
-                                                        <h2 className="text-success">{interactionReport.summary.answers_count}</h2>
-                                                        <p className="text-muted mb-0">Total Answers</p>
+                                                        <h2 className="text-success">{interactionReport.summary?.answers_count || 0}</h2>
+                                                        <p className="text-muted mb-0">إجابات</p>
                                                     </div>
                                                 </Col>
                                                 <Col md="4">
                                                     <div className="text-center">
-                                                        <h2 className="text-warning">{interactionReport.summary.total_score_awarded}</h2>
-                                                        <p className="text-muted mb-0">Total Points Awarded</p>
+                                                        <h2 className="text-warning">{interactionReport.summary?.total_score_awarded || 0}</h2>
+                                                        <p className="text-muted mb-0">نقاط ممنوحة</p>
                                                     </div>
                                                 </Col>
                                             </Row>
@@ -1107,15 +1313,15 @@ const LectureLive = () => {
 
                                     <Card>
                                         <CardBody>
-                                            <CardTitle tag="h5">Student Performance</CardTitle>
+                                            <CardTitle tag="h5">أداء الطلاب</CardTitle>
                                             {interactionReport.by_student && interactionReport.by_student.length > 0 ? (
                                                 <Table responsive>
                                                     <thead>
                                                     <tr>
-                                                        <th>Student</th>
-                                                        <th>Questions Attempted</th>
-                                                        <th>Correct Answers</th>
-                                                        <th>Total Points</th>
+                                                        <th>الطالب</th>
+                                                        <th>أسئلة تمت محاولتها</th>
+                                                        <th>إجابات صحيحة</th>
+                                                        <th>إجمالي النقاط</th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
@@ -1138,7 +1344,7 @@ const LectureLive = () => {
                                             ) : (
                                                 <Alert color="info">
                                                     <i className="ni ni-bulb-61 mr-2"></i>
-                                                    No student interaction data available yet.
+                                                    لا توجد بيانات تفاعل للطلاب بعد.
                                                 </Alert>
                                             )}
                                         </CardBody>
@@ -1147,22 +1353,22 @@ const LectureLive = () => {
                             ) : (
                                 <div className="text-center py-4">
                                     <Spinner color="primary" />
-                                    <p className="mt-3">Loading report...</p>
+                                    <p className="mt-3">جاري تحميل التقرير...</p>
                                 </div>
                             )}
                         </ModalBody>
                         <ModalFooter>
                             <Button color="secondary" onClick={() => setReportModal(false)}>
-                                Close
+                                إغلاق
                             </Button>
                         </ModalFooter>
                     </Modal>
                 </>
             ) : (
                 <Alert color="danger">
-                    <h4>Lecture not found</h4>
+                    <h4>المحاضرة غير موجودة</h4>
                     <Button color="primary" onClick={() => navigate('/teacher/dashboard')}>
-                        Return to Dashboard
+                        العودة للوحة التحكم
                     </Button>
                 </Alert>
             )}
