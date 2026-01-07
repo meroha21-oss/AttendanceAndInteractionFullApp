@@ -40,14 +40,14 @@ export const getEcho = () => {
             encrypted: true,
 
             // تأكد من أن authEndpoint مضبوط بشكل صحيح
-            authEndpoint: `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/broadcasting/auth`,
-            auth: {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    // 'Content-Type': 'application/json'
-                }
-            }
+            // authEndpoint: `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}/broadcasting/auth`,
+            // auth: {
+            //     headers: {
+            //         'Authorization': `Bearer ${token}`,
+            //         'Accept': 'application/json',
+            //         // 'Content-Type': 'application/json'
+            //     }
+            // }
         });
 
         // إضافة مستمعين للاتصال

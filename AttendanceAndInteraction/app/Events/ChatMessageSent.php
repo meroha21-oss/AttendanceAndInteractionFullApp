@@ -3,7 +3,8 @@
 namespace App\Events;
 
 use App\Models\LectureChatMessage;
-use Illuminate\Broadcasting\PrivateChannel;
+// use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Queue\SerializesModels;
 
@@ -15,7 +16,7 @@ class ChatMessageSent implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [new PrivateChannel('lecture.' . $this->message->lecture_id)];
+        return [new Channel('lecture.' . $this->message->lecture_id)];
     }
 
     public function broadcastAs(): string

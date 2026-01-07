@@ -59,8 +59,8 @@ export const useTeacherLectureRealtime = (lectureId, teacherId, callbacks = {}) 
         try {
             // ===================== Teacher Channel =====================
             const teacherChannelName = `teacher.${teacherId}`;
-            const teacherChannel = echo.private(teacherChannelName);
-
+            const teacherChannel = echo.channel(teacherChannelName);
+            
             channelsRef.current.push(teacherChannelName);
 
             teacherChannel
@@ -88,7 +88,7 @@ export const useTeacherLectureRealtime = (lectureId, teacherId, callbacks = {}) 
 
             // ===================== Lecture Channel =====================
             const lectureChannelName = `lecture.${lectureId}`;
-            const lectureChannel = echo.private(lectureChannelName);
+            const lectureChannel = echo.channel(lectureChannelName);
 
             channelsRef.current.push(lectureChannelName);
 
