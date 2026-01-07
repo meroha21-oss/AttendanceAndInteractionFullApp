@@ -15,4 +15,12 @@ export const userService = {
 
     // Toggle user active status
     toggleActive: (id) => api.post(`/admin/users/${id}/toggle-active`),
+    register: (userData) => {
+        // تأكد من استخدام 'multipart/form-data' لارسال الصور
+        return api.post('/register', userData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
 };

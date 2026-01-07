@@ -21,10 +21,12 @@ import {
 import { useSnackbar } from 'notistack';
 import { userService } from '../../services/userService';
 import { useApi } from '../../hooks/useApi';
+import AddUserModal from './AddUserModal'; // Import the new modal
 
 const Students = () => {
     const [students, setStudents] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
+    const [addModalOpen, setAddModalOpen] = useState(false); // State for add modal
     const [editingStudent, setEditingStudent] = useState(null);
     const [formData, setFormData] = useState({
         full_name: '',
@@ -66,6 +68,19 @@ const Students = () => {
             );
             setModalOpen(false);
             resetForm();
+            fetchStudents();
+        } catch (error) {
+            // Error is handled by useApi
+        }
+    };
+
+    const handleAddStudent = async (formData) => {
+        try {
+            await callApi(() =>
+                    userService.register(formData),
+                'Student added successfully'
+            );
+            setAddModalOpen(false);
             fetchStudents();
         } catch (error) {
             // Error is handled by useApi
@@ -114,13 +129,13 @@ const Students = () => {
 
     return (
         <>
-            <Row className="mb-4">
+            <Row className="mb-4 align-items-center">
                 <Col>
                     <h2>Students</h2>
                 </Col>
                 <Col md="4">
                     <InputGroup>
-                        <InputGroupText> {/* Remove the InputGroupAddon wrapper */}
+                        <InputGroupText>
                             <i className="ni ni-zoom-split-in"></i>
                         </InputGroupText>
                         <Input
@@ -130,6 +145,14 @@ const Students = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </InputGroup>
+                </Col>
+                <Col md="auto">
+                    <Button
+                        color="primary"
+                        onClick={() => setAddModalOpen(true)}
+                    >
+                        <i className="ni ni-fat-add mr-1"></i> Add Student
+                    </Button>
                 </Col>
             </Row>
 
@@ -192,6 +215,7 @@ const Students = () => {
                 </CardBody>
             </Card>
 
+            {/* Edit Modal */}
             <Modal isOpen={modalOpen} toggle={() => setModalOpen(!modalOpen)}>
                 <ModalHeader toggle={() => setModalOpen(!modalOpen)}>
                     Edit Student
@@ -253,6 +277,15 @@ const Students = () => {
                     </ModalFooter>
                 </Form>
             </Modal>
+
+            {/* Add Student Modal */}
+            <AddUserModal
+                isOpen={addModalOpen}
+                toggle={() => setAddModalOpen(!addModalOpen)}
+                role="student"
+                onSubmit={handleAddStudent}
+                loading={loading}
+            />
         </>
     );
 };
