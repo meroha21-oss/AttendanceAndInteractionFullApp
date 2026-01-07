@@ -66,21 +66,35 @@ class CourseAssignmentService
                 ], 409);
             }
 
-            $conflict = $this->seriesHasTeacherConflict(
-                $validated['instructor_id'],
+            $teacherConflict = $this->seriesHasTeacherConflict(
+                (int)$validated['instructor_id'],
                 $first,
-                $duration,
+                (int)$duration,
                 (int)$validated['total_lectures']
             );
 
-            if ($conflict) {
+            if ($teacherConflict) {
                 return $this->unifiedResponse(false, 'Schedule conflict detected for instructor within generated series.', [], [
-                    'conflict' => true
+                    'conflict' => true,
+                    'type' => 'teacher'
+                ], 409);
+            }
+
+            $sectionConflict = $this->seriesHasSectionConflict(
+                (int)$validated['section_id'],
+                $first,
+                (int)$duration,
+                (int)$validated['total_lectures']
+            );
+
+            if ($sectionConflict) {
+                return $this->unifiedResponse(false, 'Schedule conflict detected for this section within generated series.', [], [
+                    'conflict' => true,
+                    'type' => 'section'
                 ], 409);
             }
 
             $assignment = DB::transaction(function () use ($validated, $duration, $first) {
-
                 $assignment = $this->repo->create([
                     'section_id' => $validated['section_id'],
                     'course_id' => $validated['course_id'],
@@ -111,6 +125,7 @@ class CourseAssignmentService
             ], 500);
         }
     }
+
 
     public function index()
     {
@@ -262,4 +277,27 @@ class CourseAssignmentService
 
         return false;
     }
+
+
+    private function seriesHasSectionConflict(int $sectionId, Carbon $firstStartsAt, int $duration, int $totalLectures): bool
+    {
+        for ($i = 0; $i < $totalLectures; $i++) {
+            $start = $firstStartsAt->copy()->addWeeks($i);
+            $end   = $start->copy()->addMinutes($duration);
+
+            $overlap = Lecture::where('section_id', $sectionId)
+                ->whereIn('status', ['scheduled', 'running'])
+                ->where(function ($q) use ($start, $end) {
+                    $q->where('starts_at', '<', $end)
+                      ->where('ends_at', '>', $start);
+                })
+                ->exists();
+
+            if ($overlap) return true;
+        }
+
+        return false;
+    }
 }
+
+
