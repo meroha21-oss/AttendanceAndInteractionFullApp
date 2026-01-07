@@ -62,7 +62,7 @@ class LectureChatService
             ]);
             $msg->load('user:id,full_name,role');
 
-//             event(new \App\Events\ChatMessageSent($msg));
+            event(new \App\Events\ChatMessageSent($msg));
 
             return $this->unifiedResponse(true,'Message sent.', $msg, [], 201);
         }catch(Throwable $e){
