@@ -994,11 +994,16 @@ const LectureLive = () => {
                                             <div className="p-3" style={{ height: '400px', overflowY: 'auto' }}>
                                                 {chatMessages.length > 0 ? (
                                                     chatMessages.map((message) => (
-                                                        <div key={message.id} className="mb-3">
-                                                            <div className={`d-inline-block p-3 rounded ${message.user?.role === 'teacher' ? 'bg-primary text-white' : 'bg-light'}`} style={{ maxWidth: '80%' }}>
-                                                                <div className="d-flex justify-content-between align-items-center mb-1">
+                                                        <div key={message.id}
+                                                             className={`d-flex mb-3 ${message.user?.role === 'teacher' ? 'justify-content-end' : 'justify-content-start'}`}>
+                                                            <div
+                                                                className={`d-inline-block p-3 rounded ${message.user?.role === 'teacher' ? 'bg-primary text-white' : 'bg-light'}`}
+                                                                style={{maxWidth: '80%'}}>
+                                                                <div
+                                                                    className="d-flex justify-content-between align-items-center mb-1">
                                                                     <strong>{message.user?.full_name}</strong>
-                                                                    <small className={message.user?.role === 'teacher' ? 'text-white-50' : 'text-muted'}>
+                                                                    <small
+                                                                        className={message.user?.role === 'teacher' ? 'text-white-50' : 'text-muted'}>
                                                                         {new Date(message.sent_at).toLocaleTimeString('ar-SA', {
                                                                             hour: '2-digit',
                                                                             minute: '2-digit'
