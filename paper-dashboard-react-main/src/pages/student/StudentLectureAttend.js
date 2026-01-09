@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Row,
@@ -43,9 +43,86 @@ const StudentLectureAttend = () => {
     const [joining, setJoining] = useState(false);
     const [heartbeatInterval, setHeartbeatInterval] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState('disconnected');
+
+    // مراقبة النشاط
+    const [lastActivity, setLastActivity] = useState(Date.now());
+    const activityTimeoutRef = useRef(null);
+    const [isActive, setIsActive] = useState(true);
+
     const { enqueueSnackbar } = useSnackbar();
     const { callApi } = useApi();
     const { user } = useAuth();
+
+    // ==================== Activity Monitoring ====================
+    const resetActivityTimer = useCallback(() => {
+        setLastActivity(Date.now());
+        setIsActive(true);
+
+        // إلغاء المهلة السابقة
+        if (activityTimeoutRef.current) {
+            clearTimeout(activityTimeoutRef.current);
+        }
+
+        // تعيين مهلة جديدة للنشاط (5 دقائق)
+        activityTimeoutRef.current = setTimeout(() => {
+            setIsActive(false);
+            console.log('⚠️ User inactive for 5 minutes');
+            enqueueSnackbar('أنت غير نشط! تحرك للحفاظ على حضورك.', {
+                variant: 'warning',
+                autoHideDuration: 3000
+            });
+        }, 5 * 60 * 1000); // 5 دقائق
+    }, [enqueueSnackbar]);
+
+    // مستمعي الأحداث للنشاط
+    useEffect(() => {
+        if (!attendanceToken) return;
+
+        const handleUserActivity = () => {
+            resetActivityTimer();
+        };
+
+        // إضافة مستمعي الأحداث
+        window.addEventListener('mousemove', handleUserActivity);
+        window.addEventListener('keydown', handleUserActivity);
+        window.addEventListener('click', handleUserActivity);
+        window.addEventListener('scroll', handleUserActivity);
+        window.addEventListener('touchstart', handleUserActivity);
+
+        // بدء مؤقت النشاط
+        resetActivityTimer();
+
+        return () => {
+            // تنظيف المستمعين
+            window.removeEventListener('mousemove', handleUserActivity);
+            window.removeEventListener('keydown', handleUserActivity);
+            window.removeEventListener('click', handleUserActivity);
+            window.removeEventListener('scroll', handleUserActivity);
+            window.removeEventListener('touchstart', handleUserActivity);
+
+            // تنظيف المؤقت
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
+            }
+        };
+    }, [attendanceToken, resetActivityTimer]);
+
+    // تنبيهات النشاط
+    useEffect(() => {
+        if (!attendanceToken || isActive) return;
+
+        // إرسال تنبيه كل دقيقة عند عدم النشاط
+        const inactivityAlertInterval = setInterval(() => {
+            if (!isActive) {
+                enqueueSnackbar('ما زلت غير نشط! تحرك للحفاظ على حضورك.', {
+                    variant: 'warning',
+                    autoHideDuration: 3000
+                });
+            }
+        }, 60000); // كل دقيقة
+
+        return () => clearInterval(inactivityAlertInterval);
+    }, [isActive, attendanceToken, enqueueSnackbar]);
 
     // ==================== Real-time Handlers ====================
     const handleQuestionPublished = useCallback((data) => {
@@ -72,8 +149,6 @@ const StudentLectureAttend = () => {
             option_text: option.option_text || option.text || 'Option', // Handle both 'option_text' and 'text'
             is_correct: option.is_correct || false
         }));
-        // أضف هذه الدالة في قسم الـ API Functions
-
 
         const newQuestion = {
             id: publicationId,
@@ -113,8 +188,14 @@ const StudentLectureAttend = () => {
             return [newQuestion, ...prev];
         });
     }, [enqueueSnackbar]);
+
     const handleLeaveLecture = async () => {
         try {
+            // تنظيف مؤقت النشاط
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
+            }
+
             // إرسال طلب مغادرة المحاضرة
             await callApi(() => lectureService.leaveLecture(parseInt(lectureId)));
 
@@ -141,6 +222,7 @@ const StudentLectureAttend = () => {
             enqueueSnackbar('حدث خطأ أثناء مغادرة المحاضرة', { variant: 'error' });
         }
     };
+
     const handleQuestionClosed = useCallback((data) => {
         console.log('✅ Question closed (student):', data);
 
@@ -237,6 +319,11 @@ const StudentLectureAttend = () => {
             autoHideDuration: 5000,
             anchorOrigin: { vertical: 'top', horizontal: 'center' }
         });
+
+        // تنظيف مؤقت النشاط
+        if (activityTimeoutRef.current) {
+            clearTimeout(activityTimeoutRef.current);
+        }
 
         // Clear heartbeat interval
         if (heartbeatInterval) {
@@ -376,17 +463,30 @@ const StudentLectureAttend = () => {
             if (heartbeatInterval) {
                 clearInterval(heartbeatInterval);
             }
-        };
-    }, [lectureId, navigate, enqueueSnackbar, fetchLectureData]);
-
-    // Separate useEffect for heartbeatInterval cleanup
-    useEffect(() => {
-        return () => {
-            if (heartbeatInterval) {
-                clearInterval(heartbeatInterval);
+            if (activityTimeoutRef.current) {
+                clearTimeout(activityTimeoutRef.current);
             }
         };
-    }, [heartbeatInterval]);
+    }, [lectureId, navigate, enqueueSnackbar, fetchLectureData, heartbeatInterval]);
+
+    // ==================== Heartbeat Functions ====================
+    const sendHeartbeat = useCallback(async (token) => {
+        // لا ترسل نبضة إذا كان المستخدم غير نشط
+        if (!isActive) {
+            console.log('⏸️ Skipping heartbeat - user inactive');
+            return;
+        }
+
+        try {
+            await lectureService.sendHeartbeat(token);
+            console.log('✅ Heartbeat sent successfully');
+        } catch (error) {
+            console.error('❌ Heartbeat failed:', error);
+            if (error.response?.status === 403) {
+                enqueueSnackbar('فشل التحقق من الحضور. قد يتم تسجيلك كمغادر.', { variant: 'warning' });
+            }
+        }
+    }, [isActive, enqueueSnackbar]);
 
     const joinLecture = async () => {
         setJoining(true);
@@ -400,12 +500,19 @@ const StudentLectureAttend = () => {
             }
 
             setAttendanceToken(token);
+            setIsActive(true);
+            setLastActivity(Date.now());
 
             // Send initial heartbeat
             await sendHeartbeat(token);
 
-            // Start heartbeat interval (every 10 minutes)
-            const interval = setInterval(() => sendHeartbeat(token), 600000);
+            // Start heartbeat interval (كل 2 دقيقة)
+            const interval = setInterval(() => {
+                if (isActive) {
+                    sendHeartbeat(token);
+                }
+            }, 120000); // 2 دقيقة
+
             setHeartbeatInterval(interval);
 
             enqueueSnackbar('تم الانضمام إلى المحاضرة بنجاح!', { variant: 'success' });
@@ -422,18 +529,7 @@ const StudentLectureAttend = () => {
         }
     };
 
-    const sendHeartbeat = async (token) => {
-        try {
-            await lectureService.sendHeartbeat(token);
-            console.log('✅ Heartbeat sent successfully');
-        } catch (error) {
-            console.error('❌ Heartbeat failed:', error);
-            if (error.response?.status === 403) {
-                enqueueSnackbar('فشل التحقق من الحضور. قد يتم تسجيلك كمغادر.', { variant: 'warning' });
-            }
-        }
-    };
-
+    // ==================== Chat Functions ====================
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim()) return;
@@ -450,6 +546,7 @@ const StudentLectureAttend = () => {
         }
     };
 
+    // ==================== Question Functions ====================
     const handleAnswerQuestion = async (publicationId, selectedOptionId = null, answerText = null) => {
         if (!attendanceToken) {
             enqueueSnackbar('يجب الانضمام إلى المحاضرة أولاً', { variant: 'warning' });
@@ -476,6 +573,7 @@ const StudentLectureAttend = () => {
         }
     };
 
+    // ==================== Utility Functions ====================
     const calculateTimeLeft = (expiresAt) => {
         const now = new Date();
         const expires = new Date(expiresAt);
@@ -509,6 +607,7 @@ const StudentLectureAttend = () => {
         }
     };
 
+    // ==================== Render Functions ====================
     if (loading) {
         return (
             <div className="text-center py-5">
@@ -554,6 +653,13 @@ const StudentLectureAttend = () => {
                                 <i className={`ni ni-${connectionStatus === 'connected' ? 'spaceship' : 'watch-time'} mr-1`}></i>
                                 {getConnectionStatusText()}
                             </Badge>
+                            <Badge color={isActive ? "success" : "warning"} className="mr-2" pill>
+                                <i className={`ni ni-${isActive ? 'user-run' : 'watch-time'} mr-1`}></i>
+                                {isActive ? 'نشط' : 'غير نشط'}
+                            </Badge>
+                            <small className="text-muted">
+                                آخر نشاط: {Math.floor((Date.now() - lastActivity) / 1000)} ثانية
+                            </small>
                         </div>
                     )}
                 </Col>
@@ -577,7 +683,14 @@ const StudentLectureAttend = () => {
                             )}
                         </Button>
                     ) : (
-                        <Button color="danger" onClick={handleLeaveLecture}>
+                        <Button
+                            color="danger"
+                            onClick={() => {
+                                if (window.confirm('هل أنت متأكد من مغادرة المحاضرة؟ سيتم تسجيل وقت مغادرتك.')) {
+                                    handleLeaveLecture();
+                                }
+                            }}
+                        >
                             <i className="ni ni-button-power mr-1"></i>
                             مغادرة المحاضرة
                         </Button>
@@ -641,10 +754,10 @@ const StudentLectureAttend = () => {
                                             const timeLeft = calculateTimeLeft(publication.expires_at);
                                             const isClosed = publication.status === 'closed';
                                             const isExpired = timeLeft.isExpired;
-                                            const isActive = !isClosed && !isExpired && publication.status === 'published';
+                                            const isActiveQuestion = !isClosed && !isExpired && publication.status === 'published';
 
                                             return (
-                                                <Card key={publication.publication_id} className={`mb-3 border-left-${isActive ? 'warning' : 'secondary'} border-left-3`}>
+                                                <Card key={publication.publication_id} className={`mb-3 border-left-${isActiveQuestion ? 'warning' : 'secondary'} border-left-3`}>
                                                     <CardBody>
                                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                                             <div>
@@ -690,6 +803,7 @@ const StudentLectureAttend = () => {
                                                                                             ...prev,
                                                                                             [publication.publication_id]: option.id
                                                                                         }));
+                                                                                        resetActivityTimer(); // إعادة تعيين النشاط
                                                                                     }
                                                                                 }}
                                                                                 disabled={isClosed || isExpired}
@@ -716,6 +830,7 @@ const StudentLectureAttend = () => {
                                                                                             ...prev,
                                                                                             [publication.publication_id]: option.id
                                                                                         }));
+                                                                                        resetActivityTimer(); // إعادة تعيين النشاط
                                                                                     }
                                                                                 }}
                                                                                 disabled={isClosed || isExpired}
@@ -738,6 +853,7 @@ const StudentLectureAttend = () => {
                                                                                 ...prev,
                                                                                 [publication.publication_id]: e.target.value
                                                                             }));
+                                                                            resetActivityTimer(); // إعادة تعيين النشاط
                                                                         }
                                                                     }}
                                                                     placeholder="اكتب إجابتك هنا..."
@@ -781,6 +897,7 @@ const StudentLectureAttend = () => {
                                                                             selectedAnswers[publication.publication_id]
                                                                         );
                                                                     }
+                                                                    resetActivityTimer(); // إعادة تعيين النشاط
                                                                 }}
                                                                 disabled={!selectedAnswers[publication.publication_id]?.toString().trim()}
                                                                 className="mt-3"
@@ -814,7 +931,14 @@ const StudentLectureAttend = () => {
                                                         <i className="ni ni-chat-round mr-2"></i>
                                                         محادثة المحاضرة
                                                     </CardTitle>
-                                                    <Button color="link" size="sm" onClick={fetchChat}>
+                                                    <Button
+                                                        color="link"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            fetchChat();
+                                                            resetActivityTimer(); // إعادة تعيين النشاط
+                                                        }}
+                                                    >
                                                         <i className="ni ni-refresh mr-1"></i>
                                                         تحديث
                                                     </Button>
@@ -860,12 +984,18 @@ const StudentLectureAttend = () => {
                                                 <i className="ni ni-send mr-2"></i>
                                                 إرسال رسالة
                                             </CardTitle>
-                                            <Form onSubmit={handleSendMessage}>
+                                            <Form onSubmit={(e) => {
+                                                handleSendMessage(e);
+                                                resetActivityTimer(); // إعادة تعيين النشاط
+                                            }}>
                                                 <FormGroup>
                                                     <Input
                                                         type="textarea"
                                                         value={newMessage}
-                                                        onChange={(e) => setNewMessage(e.target.value)}
+                                                        onChange={(e) => {
+                                                            setNewMessage(e.target.value);
+                                                            resetActivityTimer(); // إعادة تعيين النشاط
+                                                        }}
                                                         placeholder="اكتب رسالتك هنا..."
                                                         rows="4"
                                                         maxLength="500"
