@@ -11,6 +11,7 @@ export const lectureService = {
     startLecture: (lectureId) => api.post(`/teacher/lectures/${lectureId}/start`),
 
     endLecture: (lectureId) => api.post(`/teacher/lectures/${lectureId}/end`),
+    leaveLecture:(lectureId) => api.post(`/student/lectures/${lectureId}/leave`),
 
     getLiveAttendance: (lectureId) => api.get(`/teacher/lectures/${lectureId}/attendance-live`),
 
@@ -28,4 +29,11 @@ export const lectureService = {
     getAttendanceToken: (lectureId) => api.post('/student/attendance/token', { lecture_id: lectureId }),
 
     sendHeartbeat: (token) => api.post('/student/attendance/heartbeat', { token }),
+    getPastLectures: () => {
+        return api.get('/teacher/lectures/past');
+    },
+
+    getPastLectureById: (lectureId) => {
+        return api.get(`/teacher/lectures/past/${lectureId}`);
+    },
 };
