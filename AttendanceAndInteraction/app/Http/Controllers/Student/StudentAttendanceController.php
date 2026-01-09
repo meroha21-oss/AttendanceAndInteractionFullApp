@@ -19,4 +19,11 @@ class StudentAttendanceController extends Controller
     {
         return $this->service->heartbeat($request, $request->user());
     }
+
+    public function leave(int $lectureId, Request $request)
+    {
+        $user = $request->user();
+        return $this->service->leaveLecture($lectureId, $user);
+    }
+
 }

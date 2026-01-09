@@ -10,6 +10,8 @@ use App\Models\Attendance;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+
 
 class AttendanceService
 {
@@ -169,4 +171,78 @@ class AttendanceService
             'finalized_students' => $finalized
         ], [], 200);
     }
+
+
+    public function leaveLecture(int $lectureId, $user)
+    {
+        $lecture = Lecture::find($lectureId);
+        if (!$lecture) return $this->unifiedResponse(false, 'Lecture not found.', [], [], 404);
+
+        $isEnrolled = Enrollment::where('section_id', $lecture->section_id)
+            ->where('student_id', $user->id)
+            ->exists();
+
+        if (!$isEnrolled) {
+            return $this->unifiedResponse(false, 'You are not enrolled in this section.', [], [], 403);
+        }
+
+        $now = Carbon::now();
+
+        if ($now->lt($lecture->starts_at) || $now->gt($lecture->ends_at)) {
+            return $this->unifiedResponse(false, 'You can only leave during lecture time.', [], [], 403);
+        }
+
+        return DB::transaction(function () use ($lecture, $user, $now) {
+
+            $hb = AttendanceHeartbeat::where('lecture_id', $lecture->id)
+                ->where('student_id', $user->id)
+                ->first();
+
+            if (!$hb || !$hb->joined_at) {
+                Attendance::updateOrCreate(
+                    ['lecture_id' => $lecture->id, 'student_id' => $user->id],
+                    [
+                        'status' => 'left',
+                        'checked_in_at' => null,
+                        'last_seen_at' => $now,
+                        'minutes_attended' => 0,
+                    ]
+                );
+
+                return $this->unifiedResponse(true, 'Left lecture.', [
+                    'lecture_id' => $lecture->id,
+                    'status' => 'left',
+                    'minutes_attended' => 0,
+                    'left_at' => $now->toDateTimeString(),
+                ], [], 200);
+            }
+
+            $joinedAt = Carbon::parse($hb->joined_at);
+            $lastSeen = $now;
+
+            $hb->last_seen_at = $lastSeen;
+            $hb->save();
+
+            $minutesAttended = max(0, $joinedAt->diffInMinutes(min($lastSeen, $lecture->ends_at)));
+
+            Attendance::updateOrCreate(
+                ['lecture_id' => $lecture->id, 'student_id' => $user->id],
+                [
+                    'status' => 'left',
+                    'checked_in_at' => $joinedAt,
+                    'last_seen_at' => $lastSeen,
+                    'minutes_attended' => $minutesAttended,
+                ]
+            );
+
+
+            return $this->unifiedResponse(true, 'Left lecture.', [
+                'lecture_id' => $lecture->id,
+                'status' => 'left',
+                'minutes_attended' => $minutesAttended,
+                'left_at' => $now->toDateTimeString(),
+            ], [], 200);
+        });
+    }
+
 }

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\LectureController;
 
 use App\Http\Controllers\Student\StudentAttendanceController;
 use App\Http\Controllers\Teacher\TeacherLectureController;
+use App\Http\Controllers\Teacher\TeacherLectureHistoryController;
 
 use App\Http\Controllers\Student\StudentLectureController;
 use App\Http\Controllers\Teacher\TeacherLectureScheduleController;
@@ -125,6 +126,8 @@ Route::middleware(['auth:sanctum','role:student'])->prefix('student')->group(fun
     //Students Attendance
     Route::post('attendance/token', [StudentAttendanceController::class, 'token']);
     Route::post('attendance/heartbeat', [StudentAttendanceController::class, 'heartbeat']);
+    Route::post('lectures/{lectureId}/leave', [StudentAttendanceController::class, 'leave']);
+
 
     // Student lectures
     Route::get('lectures/week', [StudentLectureController::class, 'week']);
@@ -145,6 +148,10 @@ Route::middleware(['auth:sanctum','role:teacher'])->prefix('teacher')->group(fun
     // Teacher lectures
     Route::get('lectures/week', [TeacherLectureScheduleController::class, 'week']);
     Route::get('lectures/today', [TeacherLectureScheduleController::class, 'today']);
+
+    //  Past lectures
+    Route::get('lectures/past', [TeacherLectureHistoryController::class, 'index']);
+    Route::get('lectures/past/{lectureId}', [TeacherLectureHistoryController::class, 'show']);
 
     Route::post('lectures/{id}/start', [TeacherLectureController::class, 'start']);
     Route::post('lectures/{id}/end', [TeacherLectureController::class, 'end']);

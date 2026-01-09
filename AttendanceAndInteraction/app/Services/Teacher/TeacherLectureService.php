@@ -5,11 +5,16 @@ namespace App\Services\Teacher;
 use App\Traits\ApiResponseTrait;
 use App\Models\Lecture;
 use App\Models\AttendanceHeartbeat;
+use App\Services\Attendance\AttendanceService;
 use Carbon\Carbon;
 
 class TeacherLectureService
 {
     use ApiResponseTrait;
+
+    public function __construct(
+        protected AttendanceService $attendanceService
+    ) {}
 
     public function start(int $lectureId, $teacher)
     {
@@ -63,39 +68,11 @@ class TeacherLectureService
         $lecture->ended_at = Carbon::now();
         $lecture->save();
 
+        // Finalize attendance now (so past reports are accurate)
+        $this->attendanceService->finalizeLectureAttendance($lecture->id);
+
         return $this->unifiedResponse(true, 'Lecture ended.', $lecture);
     }
-
-    // public function start(int $lectureId, $teacher)
-    // {
-    //     $lecture = Lecture::find($lectureId);
-    //     if (!$lecture) return $this->unifiedResponse(false, 'Lecture not found.', [], [], 404);
-
-    //     if ($lecture->instructor_id !== $teacher->id) {
-    //         return $this->unifiedResponse(false, 'Not allowed.', [], [], 403);
-    //     }
-
-    //     $lecture->status = 'running';
-    //     $lecture->save();
-
-    //     return $this->unifiedResponse(true, 'Lecture started.', $lecture);
-    // }
-
-    // public function end(int $lectureId, $teacher)
-    // {
-    //     $lecture = Lecture::find($lectureId);
-    //     if (!$lecture) return $this->unifiedResponse(false, 'Lecture not found.', [], [], 404);
-
-    //     if ($lecture->instructor_id !== $teacher->id) {
-    //         return $this->unifiedResponse(false, 'Not allowed.', [], [], 403);
-    //     }
-
-    //     $lecture->status = 'ended';
-    //     $lecture->ended_at = Carbon::now();
-    //     $lecture->save();
-
-    //     return $this->unifiedResponse(true, 'Lecture ended.', $lecture);
-    // }
 
     // Live list
     public function liveAttendance(int $lectureId, $teacher)
