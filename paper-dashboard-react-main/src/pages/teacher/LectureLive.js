@@ -67,24 +67,28 @@ const LectureLive = () => {
         console.log('✅ Attendance updated:', data);
 
         setAttendance(prev => {
-            const existingIndex = prev.findIndex(a => a.student?.id === data.student.id);
+            // البحث عن سجل الطالب
+            const existingIndex = prev.findIndex(a => a.student?.id === data.student?.id);
 
             if (existingIndex !== -1) {
+                // تحديث السجل الحالي
                 const updated = [...prev];
                 updated[existingIndex] = {
-                    ...updated[existingIndex],
-                    last_seen_at: data.last_seen_at || new Date().toISOString(),
-                    status: 'present',
-                    student: data.student || updated[existingIndex].student
+                    student: data.student || updated[existingIndex].student,
+                    status: data.status || updated[existingIndex].status,
+                    checked_in_at: data.checked_in_at || updated[existingIndex].checked_in_at,
+                    last_seen_at: data.last_seen_at || updated[existingIndex].last_seen_at,
+                    minutes_attended: data.minutes_attended || updated[existingIndex].minutes_attended
                 };
                 return updated;
             } else {
+                // إضافة سجل جديد
                 return [...prev, {
-                    id: data.student.id,
                     student: data.student,
-                    joined_at: data.joined_at || new Date().toISOString(),
-                    last_seen_at: data.last_seen_at || new Date().toISOString(),
-                    status: 'present'
+                    status: data.status || 'absent',
+                    checked_in_at: data.checked_in_at || null,
+                    last_seen_at: data.last_seen_at || null,
+                    minutes_attended: data.minutes_attended || 0
                 }];
             }
         });
@@ -257,19 +261,18 @@ const LectureLive = () => {
     const handleStudentJoined = useCallback((data) => {
         console.log('🎓 Student joined:', data);
 
-        setAttendance(prev => {
-            const existing = prev.find(a => a.student?.id === data.student.id);
-            if (!existing) {
-                return [...prev, {
-                    id: data.student.id,
-                    student: data.student,
-                    joined_at: data.joined_at || new Date().toISOString(),
+        setAttendance(prev => prev.map(record => {
+            if (record.student?.id === data.student.id) {
+                return {
+                    ...record,
+                    status: 'present',
+                    checked_in_at: data.checked_in_at || new Date().toISOString(),
                     last_seen_at: new Date().toISOString(),
-                    status: 'present'
-                }];
+                    minutes_attended: data.minutes_attended || 0
+                };
             }
-            return prev;
-        });
+            return record;
+        }));
 
         enqueueSnackbar(`انضم ${data.student?.full_name || 'طالب'} إلى المحاضرة`, {
             variant: 'success',
@@ -286,7 +289,7 @@ const LectureLive = () => {
                 return {
                     ...record,
                     status: 'left',
-                    left_at: new Date().toISOString()
+                    last_seen_at: new Date().toISOString()
                 };
             }
             return record;
@@ -343,8 +346,17 @@ const LectureLive = () => {
     // ==================== API Functions ====================
     const fetchAttendance = useCallback(async () => {
         try {
+            // استخدام API الجديد للحضور المباشر
             const response = await callApi(() => lectureService.getLiveAttendance(lectureId));
-            setAttendance(response.data || []);
+
+            // التأكد من أن البيانات تأتي بالشكل الصحيح
+            if (response.data && Array.isArray(response.data)) {
+                setAttendance(response.data);
+                console.log('✅ Attendance data loaded:', response.data);
+            } else {
+                console.error('❌ Unexpected attendance data format:', response.data);
+                setAttendance([]);
+            }
         } catch (error) {
             console.error('❌ Error fetching attendance:', error);
             setAttendance([]);
@@ -697,6 +709,50 @@ const LectureLive = () => {
         }
     };
 
+    const getAttendanceStatusBadge = (status) => {
+        switch(status) {
+            case 'present':
+                return <Badge color="success">حاضر</Badge>;
+            case 'absent':
+                return <Badge color="danger">غائب</Badge>;
+            case 'late':
+                return <Badge color="warning">متأخر</Badge>;
+            case 'left':
+                return <Badge color="info">مغادر</Badge>;
+            default:
+                return <Badge color="secondary">{status}</Badge>;
+        }
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleString('ar-SA', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return 'تاريخ غير صالح';
+        }
+    };
+
+    const formatTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('ar-SA', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return 'وقت غير صالح';
+        }
+    };
+
     // ==================== Render ====================
     return (
         <div className="container-fluid">
@@ -726,6 +782,10 @@ const LectureLive = () => {
                                 <Badge color={getConnectionStatusColor()} className="mr-2" pill>
                                     <i className={`ni ni-${connectionStatus === 'connected' ? 'spaceship' : 'watch-time'} mr-1`}></i>
                                     {getConnectionStatusText()}
+                                </Badge>
+                                <Badge color="info" className="mr-2" pill>
+                                    <i className="ni ni-single-02 mr-1"></i>
+                                    {attendance.filter(a => a.status === 'present').length} / {attendance.length} حاضر
                                 </Badge>
                             </div>
                         </Col>
@@ -789,56 +849,114 @@ const LectureLive = () => {
                                 <Col>
                                     <Card>
                                         <CardBody>
-                                            <CardTitle tag="h5">
-                                                <i className="ni ni-single-02 mr-2"></i>
-                                                الحضور المباشر
-                                            </CardTitle>
+                                            <div className="d-flex justify-content-between align-items-center mb-4">
+                                                <CardTitle tag="h5" className="mb-0">
+                                                    <i className="ni ni-single-02 mr-2"></i>
+                                                    الحضور المباشر
+                                                </CardTitle>
+                                                <div>
+                                                    <Button color="info" size="sm" onClick={fetchAttendance}>
+                                                        <i className="ni ni-refresh mr-1"></i>
+                                                        تحديث الحضور
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            {/* Attendance Statistics */}
+                                            <Row className="mb-4">
+                                                <Col md="3">
+                                                    <Card className="text-center bg-success text-white">
+                                                        <CardBody>
+                                                            <h1 className="mb-0">
+                                                                {attendance.filter(a => a.status === 'present').length}
+                                                            </h1>
+                                                            <p className="mb-0">حاضر</p>
+                                                        </CardBody>
+                                                    </Card>
+                                                </Col>
+                                                <Col md="3">
+                                                    <Card className="text-center bg-danger text-white">
+                                                        <CardBody>
+                                                            <h1 className="mb-0">
+                                                                {attendance.filter(a => a.status === 'absent').length}
+                                                            </h1>
+                                                            <p className="mb-0">غائب</p>
+                                                        </CardBody>
+                                                    </Card>
+                                                </Col>
+                                                <Col md="3">
+                                                    <Card className="text-center bg-warning text-white">
+                                                        <CardBody>
+                                                            <h1 className="mb-0">
+                                                                {attendance.filter(a => a.status === 'late').length}
+                                                            </h1>
+                                                            <p className="mb-0">متأخر</p>
+                                                        </CardBody>
+                                                    </Card>
+                                                </Col>
+                                                <Col md="3">
+                                                    <Card className="text-center bg-info text-white">
+                                                        <CardBody>
+                                                            <h1 className="mb-0">
+                                                                {attendance.filter(a => a.status === 'left').length}
+                                                            </h1>
+                                                            <p className="mb-0">مغادر</p>
+                                                        </CardBody>
+                                                    </Card>
+                                                </Col>
+                                            </Row>
+
                                             <Table responsive hover>
                                                 <thead>
                                                 <tr>
-                                                    <th>الرقم الجامعي</th>
+                                                    <th>#</th>
                                                     <th>اسم الطالب</th>
                                                     <th>البريد الإلكتروني</th>
                                                     <th>الحالة</th>
+                                                    <th>وقت الدخول</th>
                                                     <th>آخر ظهور</th>
+                                                    <th>دقائق الحضور</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
                                                 {attendance.length > 0 ? (
-                                                    attendance.map((record) => (
-                                                        <tr key={record.id || record.student?.id}>
-                                                            <td>{record.student?.id || 'N/A'}</td>
+                                                    attendance.map((record, index) => (
+                                                        <tr key={record.student?.id || index}>
+                                                            <td>{index + 1}</td>
                                                             <td>
                                                                 <strong>{record.student?.full_name || 'طالب غير معروف'}</strong>
+                                                                <br />
+                                                                <small className="text-muted">ID: {record.student?.id || 'N/A'}</small>
                                                             </td>
                                                             <td>{record.student?.email || 'N/A'}</td>
+                                                            <td>{getAttendanceStatusBadge(record.status)}</td>
                                                             <td>
-                                                                <Badge color="success">
-                                                                    <i className="ni ni-check-bold mr-1"></i>
-                                                                    حاضر
-                                                                </Badge>
+                                                                {record.checked_in_at ?
+                                                                    formatDateTime(record.checked_in_at) :
+                                                                    'لم يدخل بعد'}
                                                             </td>
                                                             <td>
                                                                 {record.last_seen_at ?
-                                                                    new Date(record.last_seen_at).toLocaleTimeString('ar-SA') :
+                                                                    formatTime(record.last_seen_at) :
                                                                     'N/A'}
+                                                            </td>
+                                                            <td>
+                                                                <Badge color="primary">
+                                                                    {record.minutes_attended || 0} دقيقة
+                                                                </Badge>
                                                             </td>
                                                         </tr>
                                                     ))
                                                 ) : (
                                                     <tr>
-                                                        <td colSpan="5" className="text-center py-4">
+                                                        <td colSpan="7" className="text-center py-4">
                                                             <i className="ni ni-single-02 text-muted" style={{ fontSize: '3rem' }}></i>
-                                                            <p className="mt-3 text-muted">لم ينضم أي طالب بعد</p>
+                                                            <p className="mt-3 text-muted">لا توجد بيانات حضور</p>
                                                         </td>
                                                     </tr>
                                                 )}
                                                 </tbody>
                                             </Table>
-                                            <Button color="primary" size="sm" onClick={fetchAttendance}>
-                                                <i className="ni ni-refresh mr-1"></i>
-                                                تحديث الحضور
-                                            </Button>
                                         </CardBody>
                                     </Card>
                                 </Col>
@@ -1476,7 +1594,7 @@ const LectureLive = () => {
                 <Alert color="danger">
                     <h4>المحاضرة غير موجودة</h4>
                     <Button color="primary" onClick={() => navigate('/teacher/dashboard')}>
-                        العودة للوحة التحكم
+                        العودة للوحة التحكم.
                     </Button>
                 </Alert>
             )}
