@@ -72,6 +72,8 @@ const StudentLectureAttend = () => {
             option_text: option.option_text || option.text || 'Option', // Handle both 'option_text' and 'text'
             is_correct: option.is_correct || false
         }));
+        // أضف هذه الدالة في قسم الـ API Functions
+
 
         const newQuestion = {
             id: publicationId,
@@ -111,7 +113,34 @@ const StudentLectureAttend = () => {
             return [newQuestion, ...prev];
         });
     }, [enqueueSnackbar]);
+    const handleLeaveLecture = async () => {
+        try {
+            // إرسال طلب مغادرة المحاضرة
+            await callApi(() => lectureService.leaveLecture(parseInt(lectureId)));
 
+            // تنظيف الـ interval
+            if (heartbeatInterval) {
+                clearInterval(heartbeatInterval);
+                setHeartbeatInterval(null);
+            }
+
+            // إظهار رسالة نجاح
+            enqueueSnackbar('تم تسجيل مغادرتك للمحاضرة', {
+                variant: 'success',
+                autoHideDuration: 3000,
+                anchorOrigin: { vertical: 'top', horizontal: 'center' }
+            });
+
+            // الانتقال بعد ثانية واحدة
+            setTimeout(() => {
+                navigate('/student/lectures/today');
+            }, 1000);
+
+        } catch (error) {
+            console.error('❌ Error leaving lecture:', error);
+            enqueueSnackbar('حدث خطأ أثناء مغادرة المحاضرة', { variant: 'error' });
+        }
+    };
     const handleQuestionClosed = useCallback((data) => {
         console.log('✅ Question closed (student):', data);
 
@@ -548,7 +577,7 @@ const StudentLectureAttend = () => {
                             )}
                         </Button>
                     ) : (
-                        <Button color="danger" onClick={() => navigate('/student/lectures/today')}>
+                        <Button color="danger" onClick={handleLeaveLecture}>
                             <i className="ni ni-button-power mr-1"></i>
                             مغادرة المحاضرة
                         </Button>
