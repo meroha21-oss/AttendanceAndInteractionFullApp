@@ -35,6 +35,7 @@ import StudentLecturesToday from './pages/student/LecturesToday';
 import StudentLecturesWeek from './pages/student/LecturesWeek';
 import StudentLectureAttend from './pages/student/StudentLectureAttend';
 import LectureSelect from './pages/student/LectureSelect';
+import PastLectures from "./pages/teacher/PastLectures";
 
 function App() {
     return (
@@ -81,6 +82,8 @@ function App() {
                             <Route path="lectures/week" element={<TeacherLecturesWeek/>}/>
                             <Route path="lectures/:lectureId/live" element={<TeacherLectureLive/>}/>
                             <Route path="lectures/:lectureId/report" element={<LectureReport/>}/>
+                            <Route path="/teacher/lectures/past" element={<PastLectures/>}/>
+                            <Route path="/teacher/lectures/past/:lectureId" element={<LectureReport/>}/>
                         </Route>
 
                         {/* Student Routes */}

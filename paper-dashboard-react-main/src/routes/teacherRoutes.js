@@ -17,6 +17,12 @@ const teacherRoutes = [
         icon: "ni ni-calendar-grid-58 text-orange",
         layout: "",
     },
+    {
+        path: "/teacher/lectures/past",
+        name:"Past Lectures",
+        icon: "ni ni-calendar-grid-58 text-orange",
+        layout: "",
+    }
 ];
 
 export default teacherRoutes;
